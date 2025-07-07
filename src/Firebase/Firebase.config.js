@@ -5,13 +5,13 @@ import { initializeApp } from "firebase/app";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyD_JOdr3RoM25Lu5yfENp9ipYDyKEZNSz8",
-    authDomain: "quizzymath-3a548.firebaseapp.com",
-    projectId: "quizzymath-3a548",
-    storageBucket: "quizzymath-3a548.firebasestorage.app",
-    messagingSenderId: "747028318678",
-    appId: "1:747028318678:web:531b65b2c72b8ce31d7c77"
-};
+    apiKey: import.meta.env.VITE_apiKey,
+    authDomain: import.meta.env.VITE_authDomain,
+    projectId: import.meta.env.VITE_projectId,
+    storageBucket: import.meta.env.VITE_storageBucket,
+    messagingSenderId: import.meta.env.VITE_messagingSenderId,
+    appId: import.meta.env.VITE_appId,
+}
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
