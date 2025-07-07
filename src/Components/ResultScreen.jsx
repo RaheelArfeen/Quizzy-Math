@@ -12,14 +12,7 @@ const PAGE_VARIANTS = {
     exit: { opacity: 0, y: -30 }
 };
 
-// Sound object, should ideally be managed in App.js or a dedicated audio manager
-const resultsSound = new Audio('/results.mp3');
-
 const ResultsScreen = ({ gameState, gameSettings, resetGameForPlayAgain, setCurrentScreen }) => {
-
-    useEffect(() => {
-        resultsSound.play().catch(e => console.error("Error playing results sound:", e));
-    }, []); // Only play once on mount
 
     const percentage = Math.round(
         (gameState.score / gameSettings.totalQuestions) * 100
