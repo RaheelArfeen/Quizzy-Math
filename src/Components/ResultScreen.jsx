@@ -1,20 +1,25 @@
+// src/Components/ResultsScreen.js
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaCheckCircle, FaThumbsUp, FaStar, FaClock, FaRocket, FaRegTimesCircle, FaSmile } from 'react-icons/fa';
+import { FaCheckCircle, FaThumbsUp, FaStar, FaRocket, FaRegTimesCircle, FaSmile } from 'react-icons/fa';
 import { GiMuscleUp, GiPodium } from 'react-icons/gi';
-import SprinkleEffect from './SprinkleEffect'; // Assuming SprinkleEffect is here
+import SprinkleEffect from './SprinkleEffect'; // Ensure this path is correct
 
-const ResultsScreen = ({
-    pageVariants,
-    staggerContainer,
-    staggerItem,
-    gameState,
-    gameSettings,
-    generateQuestions,
-    startQuiz, // This is the handler from App.js that calls the hook's startQuiz
-    setCurrentScreen,
-    selectedOperation // Needed for restarting with the same operation
-}) => {
+// Animation variants, defined directly here for this component's scope
+const PAGE_VARIANTS = {
+    initial: { opacity: 0, y: 30 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -30 }
+};
+
+// Sound object, should ideally be managed in App.js or a dedicated audio manager
+const resultsSound = new Audio('/results.mp3');
+
+const ResultsScreen = ({ gameState, gameSettings, resetGameForPlayAgain, setCurrentScreen }) => {
+
+    useEffect(() => {
+        resultsSound.play().catch(e => console.error("Error playing results sound:", e));
+    }, []); // Only play once on mount
 
     const percentage = Math.round(
         (gameState.score / gameSettings.totalQuestions) * 100
@@ -74,20 +79,16 @@ const ResultsScreen = ({
 
     const { text, icon } = getRandomFeedback(percentage);
 
-    const resultsSound = new Audio('/results.mp3');
-    useEffect(() => {
-        resultsSound.play().catch(e => console.error("Error playing results sound:", e));
-    }, []); // Empty dependency array to play only once on mount
-
-    const handlePlayAgain = () => {
-        // Generate new questions based on the *previous* game settings
-        const newQuestions = generateQuestions(gameSettings, selectedOperation);
-        startQuiz(newQuestions, gameSettings.timePerQuestion);
-    };
-
-
     return (
-        <div className="min-h-screen bg-blue-50 font-fredoka flex items-center justify-center p-4 sm:p-8">
+        <motion.div
+            key="results"
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={PAGE_VARIANTS}
+            transition={{ duration: 0.5 }}
+            className="min-h-screen bg-blue-50 font-fredoka flex items-center justify-center p-4 sm:p-8"
+        >
             <SprinkleEffect />
             <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -184,7 +185,7 @@ const ResultsScreen = ({
                     </motion.h3>
 
                     <motion.div
-                        className="h-fit max-h-60 overflow-y-auto bg-white rounded-2xl p-6 border-4 border-purple-300 flex flex-col items-center gap-4 custom-scrollbar"
+                        className="h-fit overflow-y-auto bg-white rounded-2xl p-6 border-4 border-purple-300 flex flex-col items-center gap-4"
                         initial="hidden"
                         animate="visible"
                         variants={{
@@ -202,7 +203,7 @@ const ResultsScreen = ({
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.4 }}
-                                className={`flex items-center justify-between p-4 rounded-xl border-2 w-full ${userAnswer.isCorrect
+                                className={`flex items-center justify-between p-4 gap rounded-xl border-2 w-full ${userAnswer.isCorrect
                                     ? 'bg-green-100 border-green-300'
                                     : 'bg-red-100 border-red-300'
                                     }`}
@@ -242,7 +243,7 @@ const ResultsScreen = ({
                     <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={handlePlayAgain}
+                        onClick={resetGameForPlayAgain}
                         className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 sm:py-6 px-6 sm:px-8 rounded-2xl sm:rounded-3xl text-xl sm:text-2xl transition-all duration-200 shadow-lg hover:shadow-xl transform"
                     >
                         <i className="fas fa-redo mr-2"></i>Play Again
@@ -258,7 +259,7 @@ const ResultsScreen = ({
                     </motion.button>
                 </motion.div>
             </motion.div>
-        </div>
+        </motion.div>
     );
 };
 

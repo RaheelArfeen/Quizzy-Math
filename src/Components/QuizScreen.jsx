@@ -1,15 +1,34 @@
+// src/Components/QuizScreen.js
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCheckCircle, FaClock, FaRegTimesCircle } from 'react-icons/fa';
 
-const QuizScreen = ({ pageVariants, gameState, gameSettings, selectAnswer, getChoiceButtonClass }) => {
+// Animation variants, defined directly here for this component's scope
+const STAGGER_CONTAINER = {
+    animate: {
+        transition: {
+            staggerChildren: 0.1
+        }
+    }
+};
+const STAGGER_ITEM = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 }
+};
+const PAGE_VARIANTS = {
+    initial: { opacity: 0, y: 30 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -30 }
+};
+
+const QuizScreen = ({ gameState, gameSettings, selectAnswer, getChoiceButtonClass }) => {
     return (
         <motion.div
             key="quiz"
             initial="initial"
             animate="animate"
             exit="exit"
-            variants={pageVariants}
+            variants={PAGE_VARIANTS}
             transition={{ duration: 0.5 }}
             className="min-h-screen bg-sky-50 font-fredoka flex items-center justify-center p-4 sm:p-8"
         >
@@ -84,26 +103,11 @@ const QuizScreen = ({ pageVariants, gameState, gameSettings, selectAnswer, getCh
                         </div>
                     </div>
 
-                    <motion.div
-                        initial="initial"
-                        animate="animate"
-                        variants={{
-                            initial: {},
-                            animate: {
-                                transition: {
-                                    staggerChildren: 0.1
-                                }
-                            }
-                        }}
-                        className="grid grid-cols-2 gap-3 sm:gap-4"
-                    >
+                    <motion.div variants={STAGGER_CONTAINER} initial="initial" animate="animate" className="grid grid-cols-2 gap-3 sm:gap-4">
                         {gameState.choices.map((choice, index) => (
                             <motion.button
                                 key={index}
-                                variants={{
-                                    initial: { opacity: 0, y: 20 },
-                                    animate: { opacity: 1, y: 0 }
-                                }}
+                                variants={STAGGER_ITEM}
                                 whileHover={!gameState.showFeedback ? { scale: 1.05, y: -5 } : {}}
                                 whileTap={!gameState.showFeedback ? { scale: 0.95 } : {}}
                                 onClick={() => selectAnswer(choice)}
