@@ -1,15 +1,17 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
-import { Toaster } from 'sonner'
-import AuthProvider from './Provider/AuthProvider.jsx'
+// src/index.js (or src/main.jsx)
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+import AuthProvider from './Provider/AuthProvider';
+import { Toaster } from 'sonner';
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <AuthProvider>
-      <Toaster />
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <AuthProvider> 
       <App />
+      <Toaster position="bottom-right" richColors />
     </AuthProvider>
-  </StrictMode>,
-)
+  </React.StrictMode>
+);

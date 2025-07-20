@@ -1,21 +1,17 @@
-// src/Components/TimeTablesScreen.js
 import React from 'react';
 import { motion } from 'framer-motion';
 
-// Animation variants, defined directly here for this component's scope
-const PAGE_VARIANTS = {
+const pageVariants = {
     initial: { opacity: 0, y: 30 },
     animate: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: -30 }
 };
-const STAGGER_CONTAINER = {
-    animate: {
-        transition: {
-            staggerChildren: 0.1
-        }
-    }
+
+const staggerContainer = {
+    animate: { transition: { staggerChildren: 0.05 } }
 };
-const STAGGER_ITEM = {
+
+const staggerItem = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 }
 };
@@ -27,7 +23,7 @@ const TimeTablesScreen = ({ setCurrentScreen }) => {
             initial="initial"
             animate="animate"
             exit="exit"
-            variants={PAGE_VARIANTS}
+            variants={pageVariants}
             transition={{ duration: 0.5 }}
             className="min-h-screen bg-sky-50 font-fredoka p-4 sm:p-8"
         >
@@ -47,14 +43,14 @@ const TimeTablesScreen = ({ setCurrentScreen }) => {
                 <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="text-4xl sm:text-5xl lg:text-7xl font-bold text-purple-600 mb-2 sm:mb-4">Time Tables!</motion.h1>
                 <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }} className="text-lg sm:text-xl lg:text-2xl text-gray-600 mb-8 sm:mb-12 px-4">Learn your multiplication tables (1–20)</motion.p>
 
-                <motion.div variants={STAGGER_CONTAINER} initial="initial" animate="animate" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 px-4 sm:px-8">
+                <motion.div variants={staggerContainer} initial="initial" animate="animate" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 px-4 sm:px-8">
                     {Array.from({ length: 20 }, (_, i) => i + 1).map((num) => (
-                        <motion.div key={num} variants={STAGGER_ITEM} className="bg-white rounded-3xl p-4 sm:p-6 border-4 border-purple-300 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                        <motion.div key={num} variants={staggerItem} className="bg-white rounded-3xl p-4 sm:p-6 border-4 border-purple-300 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                             <h3 className="text-2xl sm:text-3xl font-bold text-purple-700 mb-4">{num} Times Table</h3>
                             <ul className="text-purple-800 font-medium text-base sm:text-lg space-y-1">
                                 {Array.from({ length: 10 }, (_, j) => j + 1).map((n) => (
-                                    <li key={n} className="flex justify-between max-w-[160px] mx-auto gap-2">
-                                        <span className='text-lg sm:text-2xl text-left'>{num} × {n} =</span>
+                                    <li key={n} className="flex justify-between">
+                                        <span className='text-lg sm:text-2xl'>{num} × {n} =</span>
                                         <span className="text-lg sm:text-2xl font-bold">{num * n}</span>
                                     </li>
                                 ))}

@@ -1,34 +1,40 @@
-// src/Components/QuizScreen.js
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaCheckCircle, FaClock, FaRegTimesCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaRegTimesCircle, FaClock } from 'react-icons/fa';
 
-// Animation variants, defined directly here for this component's scope
-const STAGGER_CONTAINER = {
-    animate: {
-        transition: {
-            staggerChildren: 0.1
-        }
-    }
-};
-const STAGGER_ITEM = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 }
-};
-const PAGE_VARIANTS = {
+const pageVariants = {
     initial: { opacity: 0, y: 30 },
     animate: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: -30 }
 };
 
-const QuizScreen = ({ gameState, gameSettings, selectAnswer, getChoiceButtonClass }) => {
+const staggerContainer = {
+    animate: { transition: { staggerChildren: 0.1 } }
+};
+
+const staggerItem = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 }
+};
+
+const QuizScreen = ({ gameState, gameSettings, selectAnswer }) => {
+
+    const getChoiceButtonClass = (choice) => {
+        if (!gameState.showFeedback) {
+            return "bg-white border-4 border-purple-300 text-purple-600";
+        }
+        if (choice === gameState.currentAnswer) return "bg-green-500 border-4 border-green-600 text-white scale-105";
+        if (choice === gameState.selectedAnswer) return "bg-red-500 border-4 border-red-600 text-white";
+        return "bg-gray-300 border-4 border-gray-400 text-gray-600 opacity-50";
+    };
+
     return (
         <motion.div
             key="quiz"
             initial="initial"
             animate="animate"
             exit="exit"
-            variants={PAGE_VARIANTS}
+            variants={pageVariants}
             transition={{ duration: 0.5 }}
             className="min-h-screen bg-sky-50 font-fredoka flex items-center justify-center p-4 sm:p-8"
         >
@@ -79,23 +85,13 @@ const QuizScreen = ({ gameState, gameSettings, selectAnswer, getChoiceButtonClas
                         <div className="mt-6 h-16">
                             <AnimatePresence>
                                 {gameState.showFeedback && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -20 }}
-                                    >
+                                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
                                         {gameState.selectedAnswer === gameState.currentAnswer ? (
-                                            <div className="text-2xl sm:text-3xl font-bold text-green-600 animate-bounce flex items-center gap-2">
-                                                <FaCheckCircle /> Correct! Great job!
-                                            </div>
+                                            <div className="text-2xl sm:text-3xl font-bold text-green-600 animate-bounce flex items-center gap-2"><FaCheckCircle /> Correct! Great job!</div>
                                         ) : gameState.selectedAnswer === null ? (
-                                            <div className="text-2xl sm:text-3xl font-bold text-orange-600 flex items-center gap-1">
-                                                <FaClock /> Time's up! Answer: {gameState.currentAnswer}
-                                            </div>
+                                            <div className="text-2xl sm:text-3xl font-bold text-orange-600 flex items-center gap-1"><FaClock /> Time's up! Answer: {gameState.currentAnswer}</div>
                                         ) : (
-                                            <div className="text-2xl sm:text-3xl font-bold text-red-600 flex items-center gap-2">
-                                                <FaRegTimesCircle /> Good try! Answer: {gameState.currentAnswer}
-                                            </div>
+                                            <div className="text-2xl sm:text-3xl font-bold text-red-600 flex items-center gap-2"><FaRegTimesCircle /> Good try! Answer: {gameState.currentAnswer}</div>
                                         )}
                                     </motion.div>
                                 )}
@@ -103,11 +99,11 @@ const QuizScreen = ({ gameState, gameSettings, selectAnswer, getChoiceButtonClas
                         </div>
                     </div>
 
-                    <motion.div variants={STAGGER_CONTAINER} initial="initial" animate="animate" className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <motion.div variants={staggerContainer} initial="initial" animate="animate" className="grid grid-cols-2 gap-3 sm:gap-4">
                         {gameState.choices.map((choice, index) => (
                             <motion.button
                                 key={index}
-                                variants={STAGGER_ITEM}
+                                variants={staggerItem}
                                 whileHover={!gameState.showFeedback ? { scale: 1.05, y: -5 } : {}}
                                 whileTap={!gameState.showFeedback ? { scale: 0.95 } : {}}
                                 onClick={() => selectAnswer(choice)}
