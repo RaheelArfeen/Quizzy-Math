@@ -1,109 +1,258 @@
 import React, { createContext, useEffect, useState } from "react";
-import app from "../Firebase/Firebase.config";
-import axios from "axios";
 import {
-    createUserWithEmailAndPassword,
     getAuth,
+    createUserWithEmailAndPassword,
+    updateProfile,
     onAuthStateChanged,
     signInWithEmailAndPassword,
     signOut,
-    updateProfile,
+    GoogleAuthProvider,
+    signInWithPopup,
+    deleteUser as firebaseDeleteUser, // Alias to avoid naming conflict
 } from "firebase/auth";
+import axios from "axios";
+import app from "../Firebase/firebase.init"; // Assuming this correctly initializes Firebase
 
 export const AuthContext = createContext();
-const auth = getAuth(app);
+const auth = getAuth(app); // Get the Firebase Auth instance
 
 const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // ✅ Save or update user using Axios
-    const saveUserToBackend = async (userData) => {
+    // Renamed from 'register' to 'createUser' for consistency with Login component
+    const createUser = async (name, email, password, photoURL) => {
+        setLoading(true);
         try {
-            const { data } = await axios.post("http://localhost:3000/users", userData);
-            console.log("✅ User sent to backend:", data);
-        } catch (error) {
-            console.error("❌ Failed to save user to backend:", error);
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const firebaseUser = userCredential.user;
+
+            await updateProfile(firebaseUser, {
+                displayName: name,
+                photoURL: photoURL || null,
+            });
+
+            const lastSignInTime = new Date(firebaseUser.metadata.lastSignInTime).toISOString();
+
+            // Send user data to your backend for registration
+            const res = await axios.post("http://localhost:3000/register", {
+                email,
+                displayName: firebaseUser.displayName,
+                photoURL,
+                lastSignInTime,
+            });
+
+            const token = res.data.token;
+            localStorage.setItem("QuizyMath-token", token);
+
+            // Set user state with data from Firebase and backend role
+            setUser({
+                displayName: firebaseUser.displayName,
+                email,
+                photoURL,
+                role: res.data.user.role || "member", // Default to 'member' if role not provided by backend
+                accessToken: token,
+                lastSignInTime,
+            });
+
+            setLoading(false);
+            return firebaseUser;
+        } catch (err) {
+            console.error("Firebase createUser/Backend register error:", err);
+            setLoading(false);
+            // Re-throw the error so the calling component (Login) can catch and display it
+            throw err;
         }
     };
 
-    const createUser = (email, password) => {
+    // Renamed from 'login' to 'signIn' for consistency with Login component
+    const signIn = async (email, password) => {
         setLoading(true);
-        console.log("📝 Creating user with email:", email);
-        return createUserWithEmailAndPassword(auth, email, password);
-    };
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const firebaseUser = userCredential.user;
 
-    const signIn = (email, password) => {
-        setLoading(true);
-        console.log("🔐 Signing in with email:", email);
-        return signInWithEmailAndPassword(auth, email, password);
-    };
+            const lastSignInTime = new Date(firebaseUser.metadata.lastSignInTime).toISOString();
 
-    const updateUser = (updatedData) => {
-        return updateProfile(auth.currentUser, updatedData)
-            .then(async () => {
-                const { displayName, email, photoURL, uid } = auth.currentUser;
-                const updatedUser = {
-                    displayName,
-                    email,
-                    photoURL,
-                    uid,
-                    lastSignInTime: new Date().toISOString(),
-                };
+            // Send user email to backend for login/role retrieval
+            const res = await axios.post("http://localhost:3000/login", { email });
 
-                setUser(updatedUser);
-                await saveUserToBackend(updatedUser);
-                console.log("🔄 User profile updated and sent to backend");
-            })
-            .catch((error) => {
-                console.error("❌ Error updating profile:", error);
+            const token = res.data.token;
+            localStorage.setItem("QuizyMath-token", token);
+
+            // Set user state with data from Firebase and backend role
+            setUser({
+                displayName: firebaseUser.displayName,
+                email: firebaseUser.email,
+                photoURL: firebaseUser.photoURL,
+                role: res.data.user.role || "member",
+                accessToken: token,
+                lastSignInTime,
             });
+
+            setLoading(false);
+            return true;
+        } catch (err) {
+            console.error("Firebase signIn/Backend login error:", err);
+            setLoading(false);
+            throw err; // Re-throw the error for Login component to handle
+        }
     };
 
-    const logOut = () => {
+    // Kept as 'loginWithGoogle' as it was already consistent with Login component's call
+    const loginWithGoogle = async () => {
         setLoading(true);
-        console.log("🚪 Logging out...");
-        return signOut(auth);
+        try {
+            const provider = new GoogleAuthProvider();
+            const result = await signInWithPopup(auth, provider);
+            const firebaseUser = result.user;
+
+            const lastSignInTime = new Date(firebaseUser.metadata.lastSignInTime).toISOString();
+
+            // Send user email to backend for login/role retrieval (or registration if new)
+            // Your backend should handle if this user is new or existing.
+            const res = await axios.post("http://localhost:3000/login", {
+                email: firebaseUser.email,
+            });
+
+            const token = res.data.token;
+            localStorage.setItem("QuizyMath-token", token);
+
+            // Set user state with data from Firebase and backend role
+            setUser({
+                displayName: firebaseUser.displayName,
+                email: firebaseUser.email,
+                photoURL: firebaseUser.photoURL,
+                role: res.data.user.role || "member",
+                accessToken: token,
+                lastSignInTime,
+            });
+
+            setLoading(false);
+            return true;
+        } catch (err) {
+            console.error("Google login error:", err);
+            setLoading(false);
+            throw err; // Re-throw the error for Login component to handle
+        }
+    };
+
+    const updateUser = async (updatedData) => {
+        try {
+            await updateProfile(auth.currentUser, updatedData);
+            const { displayName, email, photoURL, metadata } = auth.currentUser;
+            const lastSignInTime = new Date(metadata.lastSignInTime).toISOString();
+
+            setUser((prev) => ({
+                ...prev,
+                displayName,
+                email,
+                photoURL,
+                lastSignInTime,
+            }));
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            throw error; // Re-throw for calling component to handle
+        }
+    };
+
+    const logOut = async () => {
+        setLoading(true);
+        try {
+            await signOut(auth);
+            localStorage.removeItem("QuizyMath-token");
+            setUser(null);
+        } catch (err) {
+            console.error("Logout error:", err);
+            throw err; // Re-throw for calling component to handle
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Added deleteUser function for completeness
+    const deleteUser = async (userToDelete) => {
+        setLoading(true);
+        try {
+            await firebaseDeleteUser(userToDelete);
+            console.log("Firebase user deleted successfully.");
+            setUser(null); // Clear user state after deletion
+        } catch (error) {
+            console.error("Error deleting user:", error);
+            throw error; // Re-throw for calling component to handle
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+            setLoading(true); // Set loading true at the start of the observer
             if (currentUser) {
-                const { displayName, email, photoURL, uid } = currentUser;
-                const userData = {
-                    displayName,
-                    email,
-                    photoURL,
-                    uid,
-                    lastSignInTime: new Date().toISOString(),
-                };
+                try {
+                    // Get fresh ID token
+                    const token = await currentUser.getIdToken(true);
+                    localStorage.setItem("QuizyMath-token", token);
 
-                setUser(userData);
-                await saveUserToBackend(userData);
+                    // Fetch role from backend
+                    const roleRes = await axios.get(
+                        `http://localhost:3000/users/role/${currentUser.email}`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                            },
+                        }
+                    );
 
-                console.log("👤 Auth state changed: user signed in", email);
+                    const lastSignInTime = new Date(currentUser.metadata.lastSignInTime).toISOString();
+
+                    setUser({
+                        displayName: currentUser.displayName,
+                        email: currentUser.email,
+                        photoURL: currentUser.photoURL,
+                        role: roleRes.data.role || "member",
+                        accessToken: token,
+                        lastSignInTime,
+                    });
+                } catch (error) {
+                    console.error("Auth state change sync error with backend:", error);
+                    // Fallback if backend call fails but Firebase user is still authenticated
+                    const fallbackToken = await currentUser.getIdToken();
+                    const lastSignInTime = new Date(currentUser.metadata.lastSignInTime).toISOString();
+
+                    localStorage.setItem("QuizyMath-token", fallbackToken);
+                    setUser({
+                        displayName: currentUser.displayName,
+                        email: currentUser.email,
+                        photoURL: currentUser.photoURL,
+                        role: "member", // Default to member if role fetch fails
+                        accessToken: fallbackToken,
+                        lastSignInTime,
+                    });
+                }
             } else {
                 setUser(null);
-                console.log("👋 Auth state changed: user signed out");
+                localStorage.removeItem("QuizyMath-token");
             }
-
-            setLoading(false);
+            setLoading(false); // Set loading false after processing
         });
 
         return () => unsubscribe();
     }, []);
 
-    const authData = {
-        user,
-        loading,
-        createUser,
-        signIn,
-        updateUser,
-        logOut,
-    };
-
     return (
-        <AuthContext.Provider value={authData}>
+        <AuthContext.Provider
+            value={{
+                user,
+                loading,
+                createUser, // Renamed from 'register'
+                signIn, // Renamed from 'login'
+                loginWithGoogle,
+                updateUser,
+                logOut,
+                deleteUser, // Exposed deleteUser
+            }}
+        >
             {children}
         </AuthContext.Provider>
     );

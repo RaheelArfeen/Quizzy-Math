@@ -5,7 +5,7 @@
 }
 
 body{
-  background-color: #F0F9FF;
+  background-color: #f8fafc; /* Use neutral-light from the new palette */
   overflow-x: hidden;
 }
 
@@ -26,7 +26,7 @@ input[type="range"]::-webkit-slider-thumb {
   width: 24px;
   border-radius: 50%;
   background: #ffffff;
-  border: 3px solid #fbbf24;
+  border: 3px solid #fbbf24; /* old amber */
   cursor: pointer;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
@@ -36,7 +36,7 @@ input[type="range"]::-moz-range-thumb {
   width: 24px;
   border-radius: 50%;
   background: #ffffff;
-  border: 3px solid #fbbf24;
+  border: 3px solid #fbbf24; /* old amber */
   cursor: pointer;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
