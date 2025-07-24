@@ -1,39 +1,46 @@
 import React, { useState, useContext } from "react";
-import { User, Save } from "lucide-react";
+import { User, Save, Upload } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router";
-import axios from "axios"; // Import axios
+import axios from "axios";
 import { AuthContext } from "../Provider/AuthProvider";
-
-// Assuming you have an AuthContext defined somewhere like this:
-// const AuthContext = React.createContext(null);
-// You would typically wrap your App or a higher-level component with AuthContext.Provider
-// For this example, we'll just define a placeholder context.
+import { Toaster, toast } from 'sonner';
 
 function AddKid() {
     const navigate = useNavigate();
-    const { user } = useContext(AuthContext)
+    const { user } = useContext(AuthContext);
 
     const [profile, setProfile] = useState({
         name: "",
         age: "",
-        avatar: "👧", // Default avatar
-        favoriteColor: "#3490dc", // Default color (using hex for consistency with backend)
+        avatar: "👧",
+        favoriteColor: "#3DA8FF", // Default to a kid-friendly blue
         gradeLevel: "",
+        imageUrl: "",
     });
     const [isLoading, setIsLoading] = useState(false);
-    const [message, setMessage] = useState({ text: "", type: "" }); // For success/error messages
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreviewUrl, setImagePreviewUrl] = useState("");
 
-    // Get parentEmail from the authenticated user
-    const parentEmail = user?.email; // Use optional chaining for safety
+    const parentEmail = user?.email;
 
-    const avatars = ["👧", "👦", "🧒", "👶", "🤓", "😊", "🌟", "🎈", "🚀", "🦄"];
-    const favoriteColors = [
-        { name: "Primary", value: "#3490dc", color: "#3490dc" },
-        { name: "Secondary", value: "#38c172", color: "#38c172" },
-        { name: "Accent", value: "#f6993f", color: "#f6993f" },
-        { name: "Neutral", value: "#f8fafc", color: "#f8fafc" },
+    const avatars = ["👧", "👦", "🧒", "🤓", "😊", "🌟", "🎈", "🚀"];
+
+    // NEW: A curated list of truly kid-friendly, vibrant colors
+    const kidFriendlyColors = [
+        { name: "Red", value: "#E53935", color: "#E53935" },
+        { name: "Green", value: "#43A047", color: "#43A047" },
+        { name: "Blue", value: "#1E88E5", color: "#1E88E5" },
+        { name: "Yellow", value: "#FDD835", color: "#FDD835" },
+        { name: "Orange", value: "#FB8C00", color: "#FB8C00" },
+        { name: "Purple", value: "#8E24AA", color: "#8E24AA" },
+        { name: "Pink", value: "#F06292", color: "#F06292" },
+        { name: "Teal", value: "#00897B", color: "#00897B" },
+        { name: "Brown", value: "#8D6E63", color: "#8D6E63" },
+        { name: "Gray", value: "#78909C", color: "#78909C" },
+
     ];
+
     const gradeLevels = [
         "Pre-K",
         "Kindergarten",
@@ -45,74 +52,99 @@ function AddKid() {
         "6th Grade",
     ];
 
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setImageFile(file);
+            setImagePreviewUrl(URL.createObjectURL(file));
+            setProfile(prevProfile => ({ ...prevProfile, avatar: "" }));
+        } else {
+            setImageFile(null);
+            setImagePreviewUrl("");
+            setProfile(prevProfile => ({ ...prevProfile, avatar: "👧" }));
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Clear any previous messages
-        setMessage({ text: "", type: "" });
-
         if (!profile.name.trim() || !profile.age.trim()) {
-            setMessage({ text: "Please fill in name and age.", type: "error" });
+            toast.error("Please fill in name and age.");
             return;
         }
 
-        // Ensure parent email is available from context
         if (!parentEmail) {
-            setMessage({ text: "Parent email not found. Please log in.", type: "error" });
+            toast.error("Parent email not found. Please log in.");
+            return;
+        }
+
+        if (!imageFile && !profile.avatar) {
+            toast.error("Please select an avatar or upload an image.");
             return;
         }
 
         setIsLoading(true);
+        const loadingToastId = toast.loading("Adding kid profile...");
 
         try {
-            // Construct the API endpoint URL using the dynamic parentEmail
-            const backendUrl = `http://localhost:3000/users/${parentEmail}/kids`; // Adjust port if different
+            const formData = new FormData();
+            formData.append("name", profile.name);
+            formData.append("age", profile.age);
+            formData.append("favoriteColor", profile.favoriteColor);
+            formData.append("gradeLevel", profile.gradeLevel);
 
-            // Use axios.post instead of fetch
-            const response = await axios.post(backendUrl, profile, {
+            if (imageFile) {
+                formData.append("kidImage", imageFile);
+                formData.append("avatar", "");
+            } else {
+                formData.append("avatar", profile.avatar);
+            }
+
+            const backendUrl = `http://localhost:3000/users/${parentEmail}/kids`;
+
+            const response = await axios.post(backendUrl, formData, {
                 headers: {
-                    "Content-Type": "application/json",
+                    "Content-Type": "multipart/form-data",
                 },
             });
 
-            // Axios automatically parses JSON, so response.data contains the parsed object
             const data = response.data;
 
-            if (response.status >= 200 && response.status < 300) { // Check for successful status codes
-                setMessage({ text: data.message || "Kid profile added successfully!", type: "success" });
-                // Optionally clear the form or navigate
+            if (response.status >= 200 && response.status < 300) {
+                toast.success(data.message || "Kid profile added successfully!", { id: loadingToastId });
                 setProfile({
                     name: "",
                     age: "",
                     avatar: "👧",
-                    favoriteColor: "#3490dc",
+                    favoriteColor: "#3DA8FF", // Reset to default kid-friendly blue
                     gradeLevel: "",
+                    imageUrl: "",
                 });
-                // Navigate back to dashboard after a short delay for message visibility
+                setImageFile(null);
+                setImagePreviewUrl("");
                 setTimeout(() => navigate("/dashboard"), 1500);
             } else {
-                // This block might be less frequently hit with axios as it throws for non-2xx codes
-                setMessage({ text: data.error || "Failed to add kid profile.", type: "error" });
+                toast.error(data.error || "Failed to add kid profile.", { id: loadingToastId });
             }
         } catch (error) {
             console.error("Error adding kid profile:", error);
-            // Axios errors have a 'response' property for server errors
             if (error.response) {
-                setMessage({ text: error.response.data.error || "Server error. Please try again.", type: "error" });
+                toast.error(error.response.data.error || "Server error. Please try again.", { id: loadingToastId });
             } else if (error.request) {
-                setMessage({ text: "No response from server. Please check your network.", type: "error" });
+                toast.error("No response from server. Please check your network.", { id: loadingToastId });
             } else {
-                setMessage({ text: "An unexpected error occurred. Please try again.", type: "error" });
+                toast.error("An unexpected error occurred. Please try again.", { id: loadingToastId });
             }
         } finally {
             setIsLoading(false);
         }
     };
 
-    const isFormValid = profile.name.trim() && profile.age.trim();
+    const isFormValid = profile.name.trim() && profile.age.trim() && (imageFile || profile.avatar);
 
     return (
         <div className="min-h-screen bg-neutral font-sans mt-6">
+            <Toaster richColors position="top-center" />
             <div className="container mx-auto px-4 py-8">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -140,19 +172,7 @@ function AddKid() {
                     >
                         <div className="bg-white p-8 rounded-2xl shadow-xl border border-neutral-dark">
                             <form onSubmit={handleSubmit} className="space-y-8">
-                                {/* Message Display */}
-                                {message.text && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className={`p-3 rounded-lg text-center font-medium ${message.type === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                                            }`}
-                                    >
-                                        {message.text}
-                                    </motion.div>
-                                )}
-
-                                {/* Basic Info */}
+                                {/* Basic Information Section */}
                                 <div className="space-y-6">
                                     <h2 className="text-2xl font-bold text-text-primary mb-4">
                                         Basic Information
@@ -207,7 +227,7 @@ function AddKid() {
                                                         setProfile({ ...profile, gradeLevel: grade })
                                                     }
                                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-sm
-                            ${profile.gradeLevel === grade
+                                                        ${profile.gradeLevel === grade
                                                             ? "bg-blue-500 text-white"
                                                             : "bg-neutral-dark text-text-primary hover:bg-neutral-dark border border-neutral-dark"
                                                         }`}
@@ -219,38 +239,71 @@ function AddKid() {
                                     </div>
                                 </div>
 
-                                {/* Avatar Selection */}
+                                <div className="w-full border-b border-neutral-dark"></div>
+
+                                {/* Combined Avatar Selection and Image Upload Section */}
                                 <div className="space-y-4">
                                     <h3 className="text-xl font-bold text-text-primary">
-                                        Choose an Avatar
+                                        Choose Avatar or Upload Image
                                     </h3>
-                                    <div className="grid grid-cols-5 md:grid-cols-10 gap-3">
+                                    <div className="flex flex-wrap items-center justify-between gap-3">
                                         {avatars.map((avatar) => (
                                             <motion.button
                                                 key={avatar}
                                                 type="button"
                                                 whileHover={{ scale: 1.1 }}
                                                 whileTap={{ scale: 0.9 }}
-                                                onClick={() => setProfile({ ...profile, avatar })}
-                                                className={`w-14 h-14 rounded-full text-3xl flex items-center justify-center transition-all duration-200 cursor-pointer
-                          ${profile.avatar === avatar
-                                                        ? "bg-primary-dark ring-2 ring-primary"
+                                                onClick={() => !imagePreviewUrl && setProfile({ ...profile, avatar })}
+                                                className={`w-14 h-14 rounded-full text-3xl flex items-center justify-center transition-all duration-200 cursor-pointer border border-gray-200
+                                                ${profile.avatar === avatar && !imagePreviewUrl
+                                                        ? "bg-primary-dark ring-2 ring-primary "
                                                         : "bg-neutral-dark hover:bg-neutral-dark"
-                                                    }`}
+                                                    }
+                                                ${imagePreviewUrl ? 'opacity-50 cursor-not-allowed' : ''} `}
+                                                disabled={imagePreviewUrl}
                                             >
                                                 {avatar}
                                             </motion.button>
                                         ))}
+
+                                        <label
+                                            htmlFor="kidImage"
+                                            className={`cursor-pointer w-14 h-14 rounded-full flex items-center justify-center text-gray-500 border-2 border-dashed border-gray-400 overflow-hidden shadow-inner flex-shrink-0
+                                                hover:border-primary hover:text-primary transition-all duration-200
+                                                ${imagePreviewUrl ? 'p-0' : 'p-2'}`}
+                                        >
+                                            {imagePreviewUrl ? (
+                                                <img
+                                                    src={imagePreviewUrl}
+                                                    alt="Kid Preview"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <Upload className="w-7 h-7" />
+                                            )}
+                                            <input
+                                                id="kidImage"
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleImageChange}
+                                                className="hidden"
+                                            />
+                                        </label>
                                     </div>
                                 </div>
 
-                                {/* Favorite Color */}
+                                <div className="w-full border-b border-neutral-dark"></div>
+
+                                {/* Favorite Color Theme Section - Kid-Friendly Palette */}
                                 <div className="space-y-4">
                                     <h3 className="text-xl font-bold text-text-primary">
-                                        Favorite Color Theme
+                                        Pick Your Favorite Color!
                                     </h3>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        {favoriteColors.map((colorOption) => (
+                                    <p className="text-gray-600 text-sm">Choose the color you like best for your profile:</p>
+
+                                    {/* Kid-Friendly Color Swatches */}
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                                        {kidFriendlyColors.map((colorOption) => (
                                             <motion.button
                                                 key={colorOption.value}
                                                 type="button"
@@ -262,17 +315,17 @@ function AddKid() {
                                                         favoriteColor: colorOption.value,
                                                     })
                                                 }
-                                                className={`p-4 rounded-xl border-2 transition-all duration-200 shadow-sm
-                          ${profile.favoriteColor === colorOption.value
-                                                        ? "border-primary bg-primary-dark"
+                                                className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-200 shadow-sm
+                                                    ${profile.favoriteColor === colorOption.value
+                                                        ? "border-primary bg-primary-dark ring-2 ring-primary" // Highlight selected color
                                                         : "border-neutral-dark hover:border-neutral-dark bg-white"
                                                     }`}
                                             >
                                                 <div
-                                                    className="w-10 h-10 rounded-full mx-auto mb-2 shadow-inner"
+                                                    className="w-12 h-12 rounded-full mx-auto mb-2 shadow-inner"
                                                     style={{ backgroundColor: colorOption.color }}
                                                 />
-                                                <div className="text-sm font-medium text-text-primary">
+                                                <div className="text-xs font-medium text-text-primary text-center">
                                                     {colorOption.name}
                                                 </div>
                                             </motion.button>
@@ -280,12 +333,24 @@ function AddKid() {
                                     </div>
                                 </div>
 
-                                {/* Preview */}
+                                <div className="w-full border-b border-neutral-dark"></div>
+
+                                {/* Profile Preview Section */}
                                 <div className="space-y-4">
                                     <h3 className="text-xl font-bold text-text-primary">Profile Preview</h3>
                                     <div className="p-6 bg-gradient-to-br from-neutral to-neutral-dark rounded-xl shadow-inner border border-neutral-dark">
                                         <div className="flex items-center gap-4">
-                                            <div className="text-5xl leading-none">{profile.avatar}</div>
+                                            {imagePreviewUrl ? (
+                                                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary shadow-md flex-shrink-0">
+                                                    <img
+                                                        src={imagePreviewUrl}
+                                                        alt="Kid Avatar"
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="text-5xl leading-none flex-shrink-0">{profile.avatar}</div>
+                                            )}
                                             <div>
                                                 <div className="text-2xl font-bold text-text-primary">
                                                     {profile.name || "Child's Name"}
@@ -299,15 +364,15 @@ function AddKid() {
                                                 <div
                                                     className="w-8 h-8 rounded-full shadow-md"
                                                     style={{
-                                                        backgroundColor: favoriteColors.find(
-                                                            (c) => c.value === profile.favoriteColor,
-                                                        )?.color,
+                                                        backgroundColor: profile.favoriteColor,
                                                     }}
                                                 />
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+
+                                <div className="w-full border-b border-neutral-dark"></div>
 
                                 {/* Submit Button */}
                                 <motion.div
@@ -320,7 +385,7 @@ function AddKid() {
                                         type="submit"
                                         disabled={!isFormValid || isLoading}
                                         className={`w-full py-4 text-lg font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-2
-                                        ${isFormValid && !isLoading
+                                            ${isFormValid && !isLoading
                                                 ? "bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-200"
                                                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
                                             }`}

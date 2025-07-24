@@ -5,7 +5,6 @@ import {
 import Root from "../Root/Root";
 
 import Home from "../Pages/Home";
-import Login from "../Pages/Login";
 import Dashboard from "../Pages/Dashboard";
 import AddKid from "../Pages/AddKid";
 import KidDashboard from "../Pages/KidDashboard";
@@ -15,11 +14,14 @@ import Results from "../Pages/Results";
 import Tables from "../Pages/Tables";
 import Placeholder from "../Pages/Placeholder";
 import NotFound from "../Pages/NotFound";
+import Register from "../Pages/Register";
+import Login from "../Pages/Login";
 
 export const router = createBrowserRouter([
     {
         path: "/",
         element: <Root />,
+        errorElement: <NotFound />,
         children: [
             {
                 index: true,
@@ -27,6 +29,7 @@ export const router = createBrowserRouter([
                 Component: Home
             },
             { path: '/login', Component: Login },
+            { path: '/register', Component: Register },
             { path: '/dashboard', Component: Dashboard },
             { path: '/add-kid', Component: AddKid },
             { path: '/kid/:id', Component: KidDashboard },
@@ -52,12 +55,6 @@ export const router = createBrowserRouter([
                     />
                 )
             },
-            // Catch-all route for any undefined paths
-            { path: '*', Component: NotFound }
         ]
     },
-    // If you need routes that do NOT use the Root layout, define them here at the top level.
-    // For example, if Login or Index should not have the Root layout:
-    // { path: '/login', element: <Login /> },
-    // { path: '/', element: <Index /> },
 ]);

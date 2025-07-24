@@ -8,13 +8,24 @@ import {
   RouterProvider,
 } from "react-router";
 import { router } from './Router/route';
+import { HeadProvider } from 'react-head';
+import {
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <AuthProvider>
-      <RouterProvider router={router} />
-      <Toaster position="bottom-right" richColors />
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <HeadProvider>
+          <RouterProvider router={router} />
+          <Toaster position="bottom-right" richColors />
+        </HeadProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   </React.StrictMode>
 );

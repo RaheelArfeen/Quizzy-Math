@@ -13,16 +13,20 @@ import {
     Wifi,
     WifiOff,
     AlertCircle,
+    User,
 } from 'lucide-react';
-import { toast } from 'sonner'; // Re-introducing toast as per original code
+import { toast } from 'sonner';
 import { AuthContext } from '../Provider/AuthProvider';
 
 const getNetworkStatus = () => true;
 
-const Login = () => {
+const Register = () => {
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [isOnline, setIsOnline] = useState(true);
@@ -31,8 +35,7 @@ const Login = () => {
     const location = useLocation();
     const from = location.state?.from?.pathname || '/';
 
-    // Using the actual AuthContext
-    const { user, loading, signIn, loginWithGoogle } = useContext(AuthContext);
+    const { user, loading, createUser, loginWithGoogle } = useContext(AuthContext);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -46,8 +49,7 @@ const Login = () => {
         setIsOnline(getNetworkStatus());
     }, []);
 
-    // handleEmailLogin now uses signIn from AuthContext
-    const handleEmailLogin = async (e) => {
+    const handleEmailRegister = async (e) => {
         e.preventDefault();
         setError("");
 
@@ -57,37 +59,50 @@ const Login = () => {
             return;
         }
 
-        if (!email.trim() || !password.trim()) {
+        if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
             setError("Please fill in all required fields.");
-            toast.error("Missing Information: Email and password are required.");
+            toast.error("Missing Information: All fields are required.");
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setError("Passwords do not match.");
+            toast.error("Password Mismatch: Please ensure passwords match.");
+            return;
+        }
+        if (password.length < 6) {
+            setError("Password must be at least 6 characters long.");
+            toast.error("Password Too Short: Password must be at least 6 characters long.");
             return;
         }
 
         setIsLoading(true);
 
         try {
-            await signIn(email, password); // Use signIn from AuthContext
-            toast.success("Logged in successfully!");
+            await createUser(name, email, password, null);
+
+            toast.success("Account created successfully! You are now logged in.");
             navigate(from, { replace: true });
 
         } catch (err) {
-            console.error("Authentication Error:", err);
+            console.error("Registration Error:", err);
             let errorMessage = "An unexpected error occurred.";
             if (err.code) {
                 switch (err.code) {
-                    case 'auth/user-not-found':
-                    case 'auth/wrong-password':
-                    case 'auth/invalid-credential':
-                        errorMessage = "Invalid email or password.";
+                    case 'auth/email-already-in-use':
+                        errorMessage = "This email is already registered. Please try logging in.";
+                        break;
+                    case 'auth/weak-password':
+                        errorMessage = "Password is too weak. Please choose a stronger password.";
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = "The email address is not valid.";
                         break;
                     case 'auth/network-request-failed':
                         errorMessage = "Network error. Please check your internet connection.";
                         break;
-                    case 'auth/too-many-requests':
-                        errorMessage = "Too many login attempts. Please try again later.";
-                        break;
                     default:
-                        errorMessage = err.message || "Authentication failed.";
+                        errorMessage = err.message || "Registration failed.";
                 }
             } else {
                 errorMessage = err.message || errorMessage;
@@ -99,25 +114,23 @@ const Login = () => {
         }
     };
 
-    // handleGoogleSignIn now uses loginWithGoogle from AuthContext
-    const handleGoogleSignIn = async () => {
+    const handleGoogleSignUp = async () => {
         setIsLoading(true);
         try {
-            await loginWithGoogle(); // Use loginWithGoogle from AuthContext
-            toast.success('Successfully logged in with Google');
+            await loginWithGoogle();
+
+            toast.success('Account created successfully with Google!');
             navigate(from, { replace: true });
         } catch (err) {
-            console.error("Google Sign-in Error:", err);
-            toast.error(err.message || 'Social login failed');
+            console.error("Google Sign-up Error:", err);
+            toast.error(err.message || 'Social sign-up failed');
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans antialiased text-gray-800">
-            {/* <Title>Login | QuizzyMath</Title> */}
-
+        <div className="min-h-screen bg-gray-50 font-sans antialiased text-gray-800 mb-24">
             <motion.header
                 initial={{ y: -30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -170,10 +183,10 @@ const Login = () => {
                         </div>
 
                         <h2 className="text-4xl font-bold text-gray-800 mb-4">
-                            Welcome Back, Parent!
+                            Join QuizzyMath!
                         </h2>
                         <p className="text-lg text-gray-600 mb-8">
-                            Sign in to manage your children's math learning journey, track their progress, and celebrate their achievements.
+                            Create an account to start tracking your children's math learning journey and celebrate their achievements.
                         </p>
 
                         <div className="space-y-4">
@@ -222,10 +235,10 @@ const Login = () => {
                     >
                         <div className="text-center mb-8">
                             <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                                Parent Login
+                                Create Account
                             </h3>
                             <p className="text-gray-600">
-                                Enter your email and password to access your dashboard
+                                Enter your details to create an account
                             </p>
                         </div>
 
@@ -263,7 +276,7 @@ const Login = () => {
                                 type="button"
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={handleGoogleSignIn}
+                                onClick={handleGoogleSignUp}
                                 disabled={!isOnline || isLoading}
                                 className="w-full inline-flex justify-center items-center py-3 px-4 rounded-xl border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
                             >
@@ -297,7 +310,7 @@ const Login = () => {
                                         />
                                     </svg>
                                 )}
-                                Continue with Google
+                                Sign up with Google
                             </motion.button>
                         </div>
 
@@ -312,7 +325,25 @@ const Login = () => {
                             </div>
                         </div>
 
-                        <form onSubmit={handleEmailLogin} className="space-y-6">
+                        <form onSubmit={handleEmailRegister} className="space-y-6">
+                            <motion.div className="space-y-2">
+                                <label htmlFor="name" className="block text-gray-800 font-medium text-sm">
+                                    Full Name
+                                </label>
+                                <div className="relative">
+                                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                    <input
+                                        id="name"
+                                        type="text"
+                                        placeholder="John Doe"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="w-full pl-10 py-3 rounded-xl border border-gray-200 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all duration-200"
+                                        required
+                                    />
+                                </div>
+                            </motion.div>
+
                             <motion.div className="space-y-2">
                                 <label htmlFor="email" className="block text-gray-800 font-medium text-sm">
                                     Email Address
@@ -359,6 +390,43 @@ const Login = () => {
                                         )}
                                     </button>
                                 </div>
+                                <p className="text-xs text-gray-600">
+                                    Password must be at least 6 characters long
+                                </p>
+                            </motion.div>
+
+                            <motion.div className="space-y-2">
+                                <label
+                                    htmlFor="confirmPassword"
+                                    className="block text-gray-800 font-medium text-sm"
+                                >
+                                    Confirm Password
+                                </label>
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                    <input
+                                        id="confirmPassword"
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        placeholder="Confirm your password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-200 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all duration-200"
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setShowConfirmPassword(!showConfirmPassword)
+                                        }
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 rounded-md"
+                                    >
+                                        {showConfirmPassword ? (
+                                            <EyeOff className="w-4 h-4" />
+                                        ) : (
+                                            <Eye className="w-4 h-4" />
+                                        )}
+                                    </button>
+                                </div>
                             </motion.div>
 
                             <motion.div
@@ -369,8 +437,10 @@ const Login = () => {
                                     type="submit"
                                     disabled={
                                         isLoading ||
+                                        !name.trim() ||
                                         !email.trim() ||
                                         !password.trim() ||
+                                        password !== confirmPassword ||
                                         !isOnline
                                     }
                                     className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
@@ -386,7 +456,7 @@ const Login = () => {
                                             className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mx-auto"
                                         />
                                     ) : (
-                                        "Sign In"
+                                        "Create Account"
                                     )}
                                 </button>
                             </motion.div>
@@ -395,10 +465,10 @@ const Login = () => {
                         <div className="mt-6">
                             <div className="text-center">
                                 <Link
-                                    to="/register"
+                                    to="/login"
                                     className="text-green-600 font-medium hover:text-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 rounded-md px-2 py-1"
                                 >
-                                    Need an account? Create one
+                                    Already have an account? Sign in
                                 </Link>
                             </div>
                         </div>
@@ -469,4 +539,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default Register;
