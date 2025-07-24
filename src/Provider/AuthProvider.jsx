@@ -10,7 +10,7 @@ import {
     signInWithPopup,
 } from "firebase/auth";
 import axios from "axios";
-import app from "../Firebase/firebase.init";
+import app from "../Firebase/Firebase.init";
 import Loader from "../Pages/Loader";
 
 export const AuthContext = createContext();
