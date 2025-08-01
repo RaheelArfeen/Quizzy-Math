@@ -1,10 +1,8 @@
-// ResultsScreen.jsx
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaThumbsUp, FaStar, FaRocket, FaSmile, FaClock, FaDownload } from 'react-icons/fa';
+import { FaThumbsUp, FaStar, FaRocket, FaSmile, FaClock } from 'react-icons/fa';
 import { GiMuscleUp, GiPodium } from 'react-icons/gi';
 import SprinkleEffect from './SprinkleEffect';
-import { toast } from 'sonner';
 
 const getRandomFeedback = (percentage) => {
     let messages = [];
@@ -41,60 +39,30 @@ const ResultsScreen = ({ gameState, gameSettings, restartQuiz, setCurrentScreen 
     const timedOutAnswers = gameState.userAnswers.filter(answer => answer.userAnswer === null).length;
     const incorrectAnswers = gameSettings.totalQuestions - correctAnswers - timedOutAnswers;
 
-    const [displayedFeedback, setDisplayedFeedback] = useState({ text: '', icon: null });
-    const [isGeneratingCertificate, setIsGeneratingCertificate] = useState(false);
+    const totalTimeTaken = gameState.userAnswers.reduce((sum, answer) => sum + (answer.timeTaken || 0), 0);
+    const formattedTotalTime = totalTimeTaken.toFixed(1);
+
+    const [displayedFeedback, setDisplayedFeedback] = useState(() => getRandomFeedback(percentage));
 
     useEffect(() => {
         const resultsSound = new Audio('/results.mp3');
         resultsSound.play().catch(e => console.error("Error playing results sound:", e));
+    }, []);
 
-        setDisplayedFeedback(getRandomFeedback(percentage));
-    }, [percentage]);
+    const summaryItems = [
+        { label: 'Correct', value: correctAnswers, valueColor: 'text-green-700', bgColor: 'bg-green-200' },
+        { label: 'Incorrect', value: incorrectAnswers, valueColor: 'text-red-700', bgColor: 'bg-red-200' },
+    ];
 
-    const handleDownloadCertificate = async () => {
-        setIsGeneratingCertificate(true);
-        toast.info('Generating your certificate image...', { id: 'cert-gen' });
+    if (timedOutAnswers > 0) {
+        summaryItems.push({ label: 'Timed Out', value: timedOutAnswers, valueColor: 'text-orange-700', bgColor: 'bg-orange-200', icon: <FaClock className="ml-2" /> });
+    }
 
-        try {
-            const response = await fetch('http://localhost:3000/generate-certificate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    score: gameState.score,
-                    totalQuestions: gameSettings.totalQuestions,
-                    percentage: percentage,
-                    feedbackText: displayedFeedback.text,
-                    // Send the counts for incorrect and timed-out answers
-                    incorrectCount: incorrectAnswers,
-                    timedOutCount: timedOutAnswers,
-                }),
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Server error: ${response.status} - ${errorText}`);
-            }
-
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `MathQuizCertificate_${percentage}%.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-
-            toast.success('Certificate downloaded successfully!', { id: 'cert-gen' });
-        } catch (error) {
-            console.error('Error generating certificate:', error);
-            toast.error(`Failed to generate certificate: ${error.message}`, { id: 'cert-gen' });
-        } finally {
-            setIsGeneratingCertificate(false);
-        }
-    };
+    summaryItems.push(
+        { label: 'Total Qs', value: gameSettings.totalQuestions, valueColor: 'text-blue-700', bgColor: 'bg-blue-200' },
+        { label: 'Time', value: `${formattedTotalTime}s`, valueColor: 'text-indigo-700', bgColor: 'bg-indigo-200', icon: <FaClock className="ml-2" /> },
+        { label: 'Score', value: `${percentage}%`, valueColor: 'text-purple-700', bgColor: 'bg-purple-200' }
+    );
 
     return (
         <div className="min-h-screen bg-blue-50 font-fredoka flex items-center justify-center p-4 md:p-8">
@@ -103,7 +71,7 @@ const ResultsScreen = ({ gameState, gameSettings, restartQuiz, setCurrentScreen 
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, ease: 'easeOut' }}
-                className="bg-purple-100 rounded-3xl shadow-2xl p-8 md:p-12 max-w-4xl w-full text-center border-4 border-purple-300"
+                className="bg-purple-100 rounded-3xl shadow-2xl p-8 md:p-12 max-w-6xl w-full text-center border-4 border-purple-300"
             >
                 <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.7 }} className="inline-flex items-center justify-center w-28 h-28 md:w-32 md:h-32 bg-orange-500 rounded-full mb-8 shadow-lg">
                     <i className="fas fa-trophy text-5xl md:text-6xl text-white"></i>
@@ -117,16 +85,24 @@ const ResultsScreen = ({ gameState, gameSettings, restartQuiz, setCurrentScreen 
                     You finished your math adventure!
                 </motion.p>
 
-                <motion.div initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }} className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 mb-8">
-                    {[
-                        { label: 'Correct', value: correctAnswers, color: 'text-green-600' },
-                        { label: 'Incorrect', value: incorrectAnswers, color: 'text-red-600' },
-                        { label: 'Total', value: gameSettings.totalQuestions, color: 'text-blue-600' },
-                        { label: 'Score', value: `${percentage}%`, color: 'text-purple-600' }
-                    ].map(({ label, value, color, icon }) => (
-                        <motion.div key={label} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-center">
-                            <div className={`text-4xl md:text-6xl font-bold ${color} mb-2 flex items-center justify-center`}>{value}{icon}</div>
-                            <div className="text-gray-600 font-bold text-base md:text-lg">{label}</div>
+                <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
+                    className="flex items-center justify-center gap-4 md:gap-6 mb-8 w-full"
+                >
+                    {summaryItems.map(({ label, value, valueColor, bgColor, icon }) => (
+                        <motion.div
+                            key={label}
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5 }}
+                            className={`flex flex-col w-full items-center justify-center p-4 rounded-xl shadow-md ${bgColor}`}
+                        >
+                            <div className={`text-3xl md:text-4xl font-bold ${valueColor} mb-1 flex items-center justify-center`}>
+                                {value}{icon}
+                            </div>
+                            <div className="text-gray-800 font-bold text-sm md:text-base">{label}</div>
                         </motion.div>
                     ))}
                 </motion.div>
@@ -172,16 +148,7 @@ const ResultsScreen = ({ gameState, gameSettings, restartQuiz, setCurrentScreen 
                     </div>
                 </div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8, duration: 0.6 }} className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleDownloadCertificate}
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 md:py-6 px-6 md:px-8 rounded-2xl md:rounded-3xl text-xl md:text-2xl transition-all duration-200 shadow-lg hover:shadow-xl transform flex items-center gap-2 justify-center"
-                        disabled={isGeneratingCertificate}
-                    >
-                        {isGeneratingCertificate ? 'Generating...' : <><FaDownload className="mr-2" /> Certificate</>}
-                    </motion.button>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8, duration: 0.6 }} className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={restartQuiz} className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 md:py-6 px-6 md:px-8 rounded-2xl md:rounded-3xl text-xl md:text-2xl transition-all duration-200 shadow-lg hover:shadow-xl transform">
                         <i className="fas fa-redo mr-2"></i>Play Again
                     </motion.button>
