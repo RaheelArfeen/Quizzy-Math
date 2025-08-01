@@ -43,25 +43,37 @@ const HomeScreen = ({ setCurrentScreen, setSelectedOperation, setShowModal, show
 
     const openModal = (operationId) => {
         setSelectedOperation(operationId);
-        setShowModal(true);
+        setCurrentScreen('kidName');
     };
 
     return (
-        <div className='min-h-screen flex items-center justify-center bg-sky-50 font-fredoka overflow-hidden'>
-            <div className="p-4 md:p-8 bg-sky-50 font-fredoka w-full absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center">
-                <motion.div
-                    key="home"
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    variants={pageVariants}
-                    transition={{ duration: 0.5 }}
-                    className="text-center w-full max-w-7xl mx-auto py-12 md:py-24 bg-blue-100 border-4 md:border-8 border-blue-300 rounded-3xl md:rounded-[40px] relative pb-20 md:pb-24"
-                >
-                    <div className="gear-dropdown">
-                        <HeaderButtons setCurrentScreen={setCurrentScreen} />
-                    </div>
+        <div className='min-h-screen bg-sky-50 font-fredoka p-4'>
+            <motion.div
+                key="home"
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={pageVariants}
+                transition={{ duration: 0.5 }}
+                className="max-w-7xl mx-auto py-8 md:py-12"
+            >
+                {/* Header with Navigation */}
+                <div className="flex justify-between items-center mb-8">
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setCurrentScreen('dashboard')}
+                        className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl font-bold shadow-lg transition-colors duration-300 flex items-center gap-2"
+                    >
+                        <i className="fas fa-chart-bar"></i>
+                        <span className="hidden sm:inline">Dashboard</span>
+                    </motion.button>
+                    
+                    <HeaderButtons setCurrentScreen={setCurrentScreen} />
+                </div>
 
+                {/* Main Content */}
+                <div className="text-center bg-blue-100 border-4 md:border-8 border-blue-300 rounded-3xl md:rounded-[40px] p-6 md:p-12 relative">
                     <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
@@ -93,7 +105,7 @@ const HomeScreen = ({ setCurrentScreen, setSelectedOperation, setShowModal, show
                         variants={staggerContainer}
                         initial="initial"
                         animate="animate"
-                        className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 px-4 max-w-6xl mx-auto"
+                        className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto"
                     >
                         {operations.map((op) => (
                             <motion.button
@@ -102,33 +114,34 @@ const HomeScreen = ({ setCurrentScreen, setSelectedOperation, setShowModal, show
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => openModal(op.id)}
-                                className={`${op.color} text-white rounded-3xl p-6 md:p-8 shadow-lg w-full flex flex-col items-center text-center transition-colors duration-300`}
+                                className={`${op.color} text-white rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-lg w-full flex flex-col items-center text-center transition-colors duration-300`}
                             >
-                                <i className={`${op.icon} text-4xl md:text-6xl mb-4`}></i>
-                                <h3 className="text-lg md:text-3xl font-bold">{op.name}</h3>
+                                <i className={`${op.icon} text-3xl md:text-5xl mb-2 md:mb-4`}></i>
+                                <h3 className="text-sm md:text-xl lg:text-2xl font-bold">{op.name}</h3>
                             </motion.button>
                         ))}
                     </motion.div>
 
                     {/* Absolute Footer */}
-                    <footer className="absolute -bottom-7 left-0 right-0 mx-auto text-center">
-                        <p className="py-3 px-6 rounded-full bg-blue-300 border-2 border-blue-400 w-fit mx-auto text-blue-800 text-sm font-semibold shadow-md">
+                    <footer className="mt-8 md:mt-12">
+                        <p className="py-2 px-4 md:py-3 md:px-6 rounded-full bg-blue-300 border-2 border-blue-400 w-fit mx-auto text-blue-800 text-xs md:text-sm font-semibold shadow-md">
                             Developed with ❤️ by{' '}
                             <a
                                 className="underline text-blue-600 hover:text-blue-800 transition-colors duration-200"
                                 href="https://raheel-arfeen.web.app"
                                 target="_blank"
+                                rel="noopener noreferrer"
                             >
                                 Raheel Arfeen
                             </a>
                         </p>
                     </footer>
-                </motion.div>
+                </div>
 
                 <AnimatePresence>
                     {showModal && <SettingsModal operations={operations} setShowModal={setShowModal} {...modalProps} />}
                 </AnimatePresence>
-            </div>
+            </motion.div>
         </div>
     );
 };

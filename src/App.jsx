@@ -4,6 +4,8 @@ import { toast } from 'sonner';
 import { AnimatePresence } from 'framer-motion';
 
 import HomeScreen from './Components/HomeScreen';
+import DashboardScreen from './Components/DashboardScreen';
+import KidNameScreen from './Components/KidNameScreen';
 
 import QuizScreen from './Components/QuizScreen';
 import ResultsScreen from './Components/ResultScreen';
@@ -13,6 +15,11 @@ const App = () => {
   const [currentScreen, setCurrentScreen] = useState('home');
   const [selectedOperation, setSelectedOperation] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [kidName, setKidName] = useState('');
+  const [quizHistory, setQuizHistory] = useState(() => {
+    const saved = localStorage.getItem('quizHistory');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   const [gameSettings, setGameSettings] = useState({
     selectedTables: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
@@ -32,6 +39,11 @@ const App = () => {
     showFeedback: false,
     userAnswers: []
   });
+
+  // Save quiz history to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('quizHistory', JSON.stringify(quizHistory));
+  }, [quizHistory]);
 
   // --- Helper Functions for Quiz Logic ---
 
@@ -230,15 +242,45 @@ const App = () => {
     setCurrentScreen('quiz');
   }, [gameSettings, generateQuestions]);
 
+  const saveQuizResult = useCallback((finalScore, totalQuestions, operation, timeTaken) => {
+    const newResult = {
+      id: Date.now(),
+      kidName,
+      operation,
+      score: finalScore,
+      totalQuestions,
+      percentage: Math.round((finalScore / totalQuestions) * 100),
+      timeTaken,
+      date: new Date().toISOString(),
+      gameSettings: { ...gameSettings }
+    };
+    setQuizHistory(prev => [newResult, ...prev].slice(0, 50)); // Keep last 50 results
+  }, [kidName, gameSettings]);
+
+  const clearHistory = useCallback(() => {
+    setQuizHistory([]);
+    toast.success('History cleared successfully!');
+  }, []);
 
   const renderScreen = () => {
     switch (currentScreen) {
+      case 'kidName':
+        return (
+          <KidNameScreen
+            kidName={kidName}
+            setKidName={setKidName}
+            selectedOperation={selectedOperation}
+            setCurrentScreen={setCurrentScreen}
+            setShowModal={setShowModal}
+          />
+        );
       case 'quiz':
         return (
           <QuizScreen
             gameState={gameState}
             gameSettings={gameSettings}
             selectAnswer={selectAnswer}
+            kidName={kidName}
           />
         );
       case 'results':
@@ -248,6 +290,17 @@ const App = () => {
             gameSettings={gameSettings}
             restartQuiz={restartQuiz}
             setCurrentScreen={setCurrentScreen}
+            kidName={kidName}
+            selectedOperation={selectedOperation}
+            saveQuizResult={saveQuizResult}
+          />
+        );
+      case 'dashboard':
+        return (
+          <DashboardScreen
+            quizHistory={quizHistory}
+            setCurrentScreen={setCurrentScreen}
+            clearHistory={clearHistory}
           />
         );
       case 'timeTables':

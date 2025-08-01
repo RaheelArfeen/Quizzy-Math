@@ -32,7 +32,7 @@ const getRandomFeedback = (percentage) => {
     return { text: randomMessage, icon };
 };
 
-const ResultsScreen = ({ gameState, gameSettings, restartQuiz, setCurrentScreen }) => {
+const ResultsScreen = ({ gameState, gameSettings, restartQuiz, setCurrentScreen, kidName, selectedOperation, saveQuizResult }) => {
     const percentage = Math.round((gameState.score / gameSettings.totalQuestions) * 100);
 
     const correctAnswers = gameState.score;
@@ -47,6 +47,11 @@ const ResultsScreen = ({ gameState, gameSettings, restartQuiz, setCurrentScreen 
     useEffect(() => {
         const resultsSound = new Audio('/results.mp3');
         resultsSound.play().catch(e => console.error("Error playing results sound:", e));
+        
+        // Save quiz result to history
+        if (saveQuizResult && kidName && selectedOperation) {
+            saveQuizResult(gameState.score, gameSettings.totalQuestions, selectedOperation, parseFloat(formattedTotalTime));
+        }
     }, []);
 
     const summaryItems = [
@@ -65,13 +70,105 @@ const ResultsScreen = ({ gameState, gameSettings, restartQuiz, setCurrentScreen 
     );
 
     return (
-        <div className="min-h-screen bg-blue-50 font-fredoka flex items-center justify-center p-4 md:p-8">
+        <div className="min-h-screen bg-blue-50 font-fredoka p-4">
             <SprinkleEffect />
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
-                className="bg-purple-100 rounded-3xl shadow-2xl p-8 md:p-12 max-w-6xl w-full text-center border-4 border-purple-300"
+            <div className="max-w-7xl mx-auto py-8 flex items-center justify-center min-h-[calc(100vh-2rem)]">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.6, ease: 'easeOut' }}
+                    className="bg-purple-100 rounded-3xl shadow-2xl p-6 md:p-8 lg:p-12 w-full text-center border-4 border-purple-300"
+                >
+                    <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.7 }} className="inline-flex items-center justify-center w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 xl:w-32 xl:h-32 bg-orange-500 rounded-full mb-6 md:mb-8 shadow-lg">
+                        <i className="fas fa-trophy text-3xl md:text-4xl lg:text-5xl xl:text-6xl text-white"></i>
+                    </motion.div>
+
+                    <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.6 }} className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-purple-600 mb-2 md:mb-4">
+                        {kidName ? `Great Job, ${kidName}!` : 'Great Job!'}
+                    </motion.h2>
+
+                    <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.6 }} className="text-base md:text-lg lg:text-xl xl:text-2xl text-gray-600 mb-6 md:mb-8">
+                        You finished your math adventure!
+                    </motion.p>
+
+                    <motion.div
+                        initial="hidden"
+                        animate="visible"
+                        variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
+                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 lg:gap-6 mb-6 md:mb-8 w-full"
+                    >
+                        {summaryItems.map(({ label, value, valueColor, bgColor, icon }) => (
+                            <motion.div
+                                key={label}
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5 }}
+                                className={`flex flex-col w-full items-center justify-center p-3 md:p-4 rounded-xl shadow-md ${bgColor}`}
+                            >
+                                <div className={`text-2xl md:text-3xl lg:text-4xl font-bold ${valueColor} mb-1 flex items-center justify-center`}>
+                                    {value}{icon}
+                                </div>
+                                <div className="text-gray-800 font-bold text-xs md:text-sm lg:text-base">{label}</div>
+                            </motion.div>
+                        ))}
+                    </motion.div>
+
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5, duration: 0.6 }} className="text-xl md:text-2xl lg:text-3xl font-bold text-purple-600 mb-6 md:mb-8 h-8 md:h-10">
+                        <span className="inline-flex items-center gap-2">{displayedFeedback.text} {displayedFeedback.icon}</span>
+                    </motion.div>
+
+                    <div className="mb-6 md:mb-8">
+                        <h3 className="text-2xl md:text-3xl font-bold text-purple-600 mb-4 md:mb-6">Question Review</h3>
+                        <div className="max-h-64 md:max-h-80 lg:max-h-96 overflow-y-auto bg-white rounded-2xl p-4 md:p-6 border-4 border-purple-300 flex flex-col items-center gap-3 md:gap-4">
+                            {gameState.userAnswers.map((userAnswer, index) => (
+                                <motion.div
+                                    key={index}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.4 }}
+                                    className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 md:p-4 gap-2 md:gap-4 rounded-xl border-2 w-full
+                                        ${userAnswer.isCorrect ? 'bg-green-100 border-green-300' :
+                                            (userAnswer.userAnswer === null ? 'bg-orange-100 border-orange-300' : 'bg-red-100 border-red-300')}`}
+                                >
+                                    <div className="flex items-center space-x-3 md:space-x-4 flex-1">
+                                        <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-white font-bold text-sm md:text-base
+                                            ${userAnswer.isCorrect ? 'bg-green-500' :
+                                                (userAnswer.userAnswer === null ? 'bg-orange-500' : 'bg-red-500')}`}>
+                                            {userAnswer.isCorrect ? '✓' : (userAnswer.userAnswer === null ? <FaClock className="text-xs md:text-sm" /> : '✗')}
+                                        </div>
+                                        <div className="text-left flex-1">
+                                            <div className="text-lg md:text-xl font-bold text-gray-800">Q{index + 1}: {userAnswer.question} = ?</div>
+                                            <div className="text-sm md:text-lg text-gray-600">
+                                                Your answer: <span className={`font-bold
+                                                    ${userAnswer.isCorrect ? 'text-green-600' :
+                                                        (userAnswer.userAnswer === null ? 'text-orange-600' : 'text-red-600')}`}>
+                                                    {userAnswer.userAnswer === null ? 'Timeout' : (userAnswer.userAnswer ?? 'No answer')}
+                                                </span>
+                                                {!userAnswer.isCorrect && (<span className="text-green-600"> • Correct: {userAnswer.correctAnswer}</span>)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-xs md:text-sm text-gray-500 self-end sm:self-center">{userAnswer.timeTaken}s</div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8, duration: 0.6 }} className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={restartQuiz} className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 md:py-4 lg:py-6 px-4 md:px-6 lg:px-8 rounded-2xl md:rounded-3xl text-lg md:text-xl lg:text-2xl transition-all duration-200 shadow-lg hover:shadow-xl transform">
+                            <i className="fas fa-redo mr-2"></i>Play Again
+                        </motion.button>
+                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setCurrentScreen('home')} className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 md:py-4 lg:py-6 px-4 md:px-6 lg:px-8 rounded-2xl md:rounded-3xl text-lg md:text-xl lg:text-2xl transition-all duration-200 shadow-lg hover:shadow-xl transform">
+                            <i className="fas fa-home mr-2"></i>Home
+                        </motion.button>
+                    </motion.div>
+                </motion.div>
+            </div>
+        </div>
+    );
+};
+
+export default ResultsScreen;
             >
                 <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.7 }} className="inline-flex items-center justify-center w-28 h-28 md:w-32 md:h-32 bg-orange-500 rounded-full mb-8 shadow-lg">
                     <i className="fas fa-trophy text-5xl md:text-6xl text-white"></i>
