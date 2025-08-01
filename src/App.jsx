@@ -5,7 +5,7 @@ import { AnimatePresence } from 'framer-motion';
 
 import HomeScreen from './Components/HomeScreen';
 
-import QuizScreen from './components/QuizScreen';
+import QuizScreen from './Components/QuizScreen';
 import ResultsScreen from './Components/ResultScreen';
 import TimeTablesScreen from './Components/TimeTablesScreen';
 
