@@ -91,7 +91,7 @@ const DashboardScreen = ({ quizHistory, setCurrentScreen, clearHistory }) => {
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setCurrentScreen('home')}
-                            className="w-12 h-12 bg-gray-500 hover:bg-gray-600 text-white text-xl flex items-center justify-center rounded-full shadow-lg transition-colors duration-300"
+                            className="w-10 h-10 md:w-12 md:h-12 bg-gray-500 hover:bg-gray-600 text-white text-xl flex items-center justify-center rounded-full shadow-lg transition-colors duration-300"
                         >
                             <i className="fa-solid fa-arrow-left"></i>
                         </motion.button>

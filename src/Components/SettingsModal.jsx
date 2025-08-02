@@ -89,12 +89,26 @@ const SettingsModal = ({
                     <div className="mb-4 md:mb-6">
                         <h3 className="text-base md:text-lg lg:text-xl font-bold text-purple-600 mb-3">Select Numbers (1-20)</h3>
                         <div className="flex flex-wrap gap-2 mb-3">
-                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => selectTables(1, 20)} className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 md:px-3 md:py-1.5 rounded-md font-bold text-xs md:text-sm shadow-md">All</motion.button>
-                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={clearAllTables} className="bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 md:px-3 md:py-1.5 rounded-md font-bold text-xs md:text-sm shadow-md">Clear</motion.button>
+                            <motion.button 
+                                whileHover={{ scale: 1.05 }} 
+                                whileTap={{ scale: 0.95 }} 
+                                onClick={() => selectTables(1, 20)} 
+                                className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 md:px-3 md:py-1.5 rounded-md font-bold text-xs md:text-sm shadow-md"
+                            >
+                                All
+                            </motion.button>
+                            <motion.button 
+                                whileHover={{ scale: 1.05 }} 
+                                whileTap={{ scale: 0.95 }} 
+                                onClick={clearAllTables} 
+                                className="bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 md:px-3 md:py-1.5 rounded-md font-bold text-xs md:text-sm shadow-md"
+                            >
+                                Clear
+                            </motion.button>
                             {[
                                 { label: '1-5', start: 1, end: 5, baseColor: 'bg-gray-400' },
                                 { label: '6-10', start: 6, end: 10, baseColor: 'bg-gray-400' },
-                                { label: '11–15', start: 11, end: 15, baseColor: 'bg-gray-400' },
+                                { label: '11-15', start: 11, end: 15, baseColor: 'bg-gray-400' },
                                 { label: '16-20', start: 16, end: 20, baseColor: 'bg-gray-400' },
                             ].map(({ label, start, end, baseColor }) => {
                                 const rangeNumbers = Array.from({ length: end - start + 1 }, (_, i) => start + i);
@@ -105,8 +119,9 @@ const SettingsModal = ({
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => selectTables(start, end)}
-                                        className={`${areAllSelected ? 'bg-purple-600 hover:bg-purple-700' : `${baseColor}`
-                                            } text-white px-2 py-1 md:px-3 md:py-1.5 rounded-md font-bold shadow-md text-xs md:text-sm`}
+                                        className={`${
+                                            areAllSelected ? 'bg-purple-600 hover:bg-purple-700' : baseColor
+                                        } text-white px-2 py-1 md:px-3 md:py-1.5 rounded-md font-bold shadow-md text-xs md:text-sm`}
                                     >
                                         {label}
                                     </motion.button>

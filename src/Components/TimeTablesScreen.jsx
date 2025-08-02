@@ -32,27 +32,59 @@ const TimeTablesScreen = ({ setCurrentScreen }) => {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setCurrentScreen('home')}
-                    className="w-10 h-10 md:w-12 md:h-12 bg-gray-500 hover:bg-gray-600 text-white text-xl md:text-2xl flex items-center justify-center rounded-full absolute top-4 left-4 shadow-lg transition-colors duration-300 cursor-pointer z-50"
+                    className="w-10 h-10 md:w-12 md:h-12 bg-gray-500 hover:bg-gray-600 text-white text-xl md:text-2xl flex items-center justify-center rounded-full absolute top-4 left-4 shadow-lg transition-colors duration-300 z-50"
                 >
                     <i className="fa-solid fa-arrow-left"></i>
                 </motion.button>
 
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: 'spring', stiffness: 260, damping: 20 }} className="inline-flex items-center justify-center w-20 h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-purple-500 rounded-full mb-4 md:mb-6 lg:mb-8 shadow-lg">
-                    <i className="fas fa-table text-3xl md:text-4xl lg:text-5xl xl:text-6xl text-white"></i>
+                <motion.div 
+                    initial={{ scale: 0 }} 
+                    animate={{ scale: 1 }} 
+                    transition={{ delay: 0.2, type: 'spring', stiffness: 260, damping: 20 }} 
+                    className="inline-flex items-center justify-center w-20 h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 bg-purple-500 rounded-full mb-4 md:mb-6 lg:mb-8 shadow-lg"
+                >
+                    <i className="fas fa-table text-3xl md:text-4xl lg:text-5xl text-white"></i>
                 </motion.div>
-                <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="text-3xl md:text-4xl lg:text-5xl xl:text-7xl font-bold text-purple-600 mb-2 md:mb-4">Time Tables!</motion.h1>
-                <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }} className="text-base md:text-lg lg:text-xl xl:text-2xl text-gray-600 mb-6 md:mb-8 lg:mb-12 px-4">Learn your multiplication tables (1–20)</motion.p>
+                
+                <motion.h1 
+                    initial={{ y: 20, opacity: 0 }} 
+                    animate={{ y: 0, opacity: 1 }} 
+                    transition={{ delay: 0.4 }} 
+                    className="text-3xl md:text-4xl lg:text-5xl font-bold text-purple-600 mb-2 md:mb-4"
+                >
+                    Time Tables!
+                </motion.h1>
+                
+                <motion.p 
+                    initial={{ y: 20, opacity: 0 }} 
+                    animate={{ y: 0, opacity: 1 }} 
+                    transition={{ delay: 0.5 }} 
+                    className="text-base md:text-lg lg:text-xl text-gray-600 mb-6 md:mb-8 lg:mb-12 px-4"
+                >
+                    Learn your multiplication tables (1-20)
+                </motion.p>
 
-                <motion.div variants={staggerContainer} initial="initial" animate="animate" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 lg:gap-6 px-4 md:px-8">
+                <motion.div 
+                    variants={staggerContainer} 
+                    initial="initial" 
+                    animate="animate" 
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 lg:gap-6 px-4 md:px-8"
+                >
                     {Array.from({ length: 20 }, (_, i) => i + 1).map((num) => (
-                        <motion.div key={num} variants={staggerItem} className="bg-white rounded-2xl md:rounded-3xl p-3 md:p-4 lg:p-6 border-2 md:border-4 border-purple-300 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                            <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-purple-700 mb-3 md:mb-4 underline">{num} Times Table</h3>
+                        <motion.div 
+                            key={num} 
+                            variants={staggerItem} 
+                            className="bg-white rounded-2xl md:rounded-3xl p-3 md:p-4 lg:p-6 border-2 md:border-4 border-purple-300 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                        >
+                            <h3 className="text-xl md:text-2xl font-bold text-purple-700 mb-3 md:mb-4 underline">
+                                {num} Times Table
+                            </h3>
                             <ul className="text-purple-800 font-medium text-sm md:text-base lg:text-lg space-y-1">
                                 {Array.from({ length: 10 }, (_, j) => j + 1).map((n) => (
-                                    <li key={n} className="flex justify-between gap-2 md:gap-3 max-w-[150px] md:max-w-[200px] mx-auto">
-                                        <span className='text-lg md:text-xl lg:text-2xl xl:text-3xl'>{num} × {n}</span>
-                                        <span className='text-lg md:text-xl lg:text-2xl xl:text-3xl'>=</span>
-                                        <span className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold">{num * n}</span>
+                                    <li key={n} className="flex justify-between gap-2 md:gap-3 max-w-[150px] md:max-w-[180px] mx-auto">
+                                        <span className='text-base md:text-lg lg:text-xl'>{num} × {n}</span>
+                                        <span className='text-base md:text-lg lg:text-xl'>=</span>
+                                        <span className="text-base md:text-lg lg:text-xl font-bold">{num * n}</span>
                                     </li>
                                 ))}
                             </ul>

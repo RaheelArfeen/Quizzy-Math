@@ -43,7 +43,7 @@ const HomeScreen = ({ setCurrentScreen, setSelectedOperation, setShowModal, show
 
     const openModal = (operationId) => {
         setSelectedOperation(operationId);
-        setCurrentScreen('kidName');
+        setCurrentScreen('kidName'); 
     };
 
     return (
@@ -139,7 +139,15 @@ const HomeScreen = ({ setCurrentScreen, setSelectedOperation, setShowModal, show
                 </div>
 
                 <AnimatePresence>
-                    {showModal && <SettingsModal operations={operations} setShowModal={setShowModal} {...modalProps} />}
+                    {showModal && (
+                        <SettingsModal 
+                            showModal={showModal}
+                            setShowModal={setShowModal}
+                            selectedOperation={selectedOperation}
+                            operations={operations}
+                            {...modalProps} 
+                        />
+                    )}
                 </AnimatePresence>
             </motion.div>
         </div>
