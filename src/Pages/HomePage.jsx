@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'sonner';
-import SettingsModal from './SettingsModal';
-import HeaderButtons from './HeaderButtons';
+import SettingsModal from '../Components/SettingsModal';
 
 const operations = [
     { id: 'addition', name: 'Addition', icon: 'fas fa-plus', color: 'bg-green-500' },
@@ -26,28 +25,18 @@ const staggerItem = {
     animate: { opacity: 1, y: 0 }
 };
 
-const HomeScreen = ({ setCurrentScreen, setSelectedOperation, setShowModal, showModal, ...modalProps }) => {
-    const [showGearDropdown, setShowGearDropdown] = useState(false);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (!event.target.closest('.gear-dropdown')) {
-                setShowGearDropdown(false);
-            }
-        };
-        if (showGearDropdown) {
-            document.addEventListener('click', handleClickOutside);
-            return () => document.removeEventListener('click', handleClickOutside);
-        }
-    }, [showGearDropdown]);
+const HomePage = () => {
+    const navigate = useNavigate();
+    const [selectedOperation, setSelectedOperation] = useState('');
+    const [showModal, setShowModal] = useState(false);
 
     const openModal = (operationId) => {
         setSelectedOperation(operationId);
-        setCurrentScreen('kidName'); 
+        navigate(`/quiz-setup/${operationId}`);
     };
 
     return (
-        <div className='min-h-screen bg-sky-50 font-fredoka p-4'>
+        <div className='min-h-screen bg-sky-50 font-fredoka'>
             <motion.div
                 key="home"
                 initial="initial"
@@ -55,23 +44,8 @@ const HomeScreen = ({ setCurrentScreen, setSelectedOperation, setShowModal, show
                 exit="exit"
                 variants={pageVariants}
                 transition={{ duration: 0.5 }}
-                className="max-w-7xl mx-auto py-8 md:py-12"
+                className="max-w-7xl mx-auto py-8 md:py-12 px-4"
             >
-                {/* Header with Navigation */}
-                <div className="flex justify-between items-center mb-8">
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setCurrentScreen('dashboard')}
-                        className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl font-bold shadow-lg transition-colors duration-300 flex items-center gap-2"
-                    >
-                        <i className="fas fa-chart-bar"></i>
-                        <span className="hidden sm:inline">Dashboard</span>
-                    </motion.button>
-                    
-                    <HeaderButtons setCurrentScreen={setCurrentScreen} />
-                </div>
-
                 {/* Main Content */}
                 <div className="text-center bg-blue-100 border-4 md:border-8 border-blue-300 rounded-3xl md:rounded-[40px] p-6 md:p-12 relative">
                     <motion.div
@@ -122,7 +96,7 @@ const HomeScreen = ({ setCurrentScreen, setSelectedOperation, setShowModal, show
                         ))}
                     </motion.div>
 
-                    {/* Absolute Footer */}
+                    {/* Footer */}
                     <footer className="mt-8 md:mt-12">
                         <p className="py-2 px-4 md:py-3 md:px-6 rounded-full bg-blue-300 border-2 border-blue-400 w-fit mx-auto text-blue-800 text-xs md:text-sm font-semibold shadow-md">
                             Developed with ❤️ by{' '}
@@ -137,21 +111,9 @@ const HomeScreen = ({ setCurrentScreen, setSelectedOperation, setShowModal, show
                         </p>
                     </footer>
                 </div>
-
-                <AnimatePresence>
-                    {showModal && (
-                        <SettingsModal 
-                            showModal={showModal}
-                            setShowModal={setShowModal}
-                            selectedOperation={selectedOperation}
-                            operations={operations}
-                            {...modalProps} 
-                        />
-                    )}
-                </AnimatePresence>
             </motion.div>
         </div>
     );
 };
 
-export default HomeScreen;
+export default HomePage;

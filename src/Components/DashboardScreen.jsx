@@ -86,19 +86,9 @@ const DashboardScreen = ({ quizHistory, setCurrentScreen, clearHistory }) => {
             >
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-                    <div className="flex items-center gap-4">
-                        <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setCurrentScreen('home')}
-                            className="w-10 h-10 md:w-12 md:h-12 bg-gray-500 hover:bg-gray-600 text-white text-xl flex items-center justify-center rounded-full shadow-lg transition-colors duration-300"
-                        >
-                            <i className="fa-solid fa-arrow-left"></i>
-                        </motion.button>
-                        <div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-purple-600">Dashboard</h1>
-                            <p className="text-gray-600">Track your math progress!</p>
-                        </div>
+                    <div>
+                        <h1 className="text-3xl md:text-4xl font-bold text-purple-600">Dashboard</h1>
+                        <p className="text-gray-600">Track your math progress!</p>
                     </div>
                     
                     {quizHistory.length > 0 && (
@@ -125,7 +115,7 @@ const DashboardScreen = ({ quizHistory, setCurrentScreen, clearHistory }) => {
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => setCurrentScreen('home')}
+                            onClick={() => window.location.href = '/'}
                             className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-2xl font-bold text-xl shadow-lg transition-colors duration-300"
                         >
                             Take Your First Quiz!
