@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import SettingsModal from '../Components/SettingsModal';
 
 const operations = [
     { id: 'addition', name: 'Addition', icon: 'fas fa-plus', color: 'bg-green-500' },
@@ -30,6 +29,10 @@ const HomePage = () => {
     const [selectedOperation, setSelectedOperation] = useState('');
     const [showModal, setShowModal] = useState(false);
 
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [])
+
     const openModal = (operationId) => {
         setSelectedOperation(operationId);
         navigate(`/quiz-setup/${operationId}`);
@@ -44,7 +47,7 @@ const HomePage = () => {
                 exit="exit"
                 variants={pageVariants}
                 transition={{ duration: 0.5 }}
-                className="max-w-7xl mx-auto py-8 md:py-12 px-4"
+                className="max-w-7xl mx-auto py-4 md:py-12 px-4"
             >
                 {/* Main Content */}
                 <div className="text-center bg-blue-100 border-4 md:border-8 border-blue-300 rounded-3xl md:rounded-[40px] p-6 md:p-12 relative">
@@ -102,7 +105,7 @@ const HomePage = () => {
                             Developed with ❤️ by{' '}
                             <a
                                 className="underline text-blue-600 hover:text-blue-800 transition-colors duration-200"
-                                href="https://raheel-arfeen.web.app"
+                                href="https://raheelarfeen.com"
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >

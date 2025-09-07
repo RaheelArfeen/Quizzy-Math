@@ -25,7 +25,7 @@ const TimeTablesScreen = ({ setCurrentScreen }) => {
             exit="exit"
             variants={pageVariants}
             transition={{ duration: 0.5 }}
-            className="font-fredoka p-4"
+            className="font-fredoka p-12"
         >
             <div className="max-w-7xl mx-auto py-8 md:py-12 bg-purple-100 border-4 md:border-8 border-purple-300 rounded-3xl md:rounded-[40px] text-center">
 

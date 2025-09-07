@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTrophy, FaClock, FaCalendarAlt, FaTrash, FaStar, FaChartLine } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const pageVariants = {
     initial: { opacity: 0, y: 30 },
@@ -17,7 +18,8 @@ const staggerItem = {
     animate: { opacity: 1, y: 0 }
 };
 
-const DashboardScreen = ({ quizHistory, setCurrentScreen, clearHistory }) => {
+const DashboardScreen = ({ quizHistory, clearHistory }) => {
+    const navigate = useNavigate();
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [showConfirmClear, setShowConfirmClear] = useState(false);
 
@@ -28,8 +30,8 @@ const DashboardScreen = ({ quizHistory, setCurrentScreen, clearHistory }) => {
         division: { name: 'Division', icon: 'fas fa-divide', color: 'bg-purple-500' }
     };
 
-    const filteredHistory = selectedFilter === 'all' 
-        ? quizHistory 
+    const filteredHistory = selectedFilter === 'all'
+        ? quizHistory
         : quizHistory.filter(quiz => quiz.operation === selectedFilter);
 
     const getPerformanceColor = (percentage) => {
@@ -57,10 +59,10 @@ const DashboardScreen = ({ quizHistory, setCurrentScreen, clearHistory }) => {
 
     const stats = {
         totalQuizzes: quizHistory.length,
-        averageScore: quizHistory.length > 0 
+        averageScore: quizHistory.length > 0
             ? Math.round(quizHistory.reduce((sum, quiz) => sum + quiz.percentage, 0) / quizHistory.length)
             : 0,
-        bestScore: quizHistory.length > 0 
+        bestScore: quizHistory.length > 0
             ? Math.max(...quizHistory.map(quiz => quiz.percentage))
             : 0,
         favoriteOperation: quizHistory.length > 0
@@ -69,7 +71,7 @@ const DashboardScreen = ({ quizHistory, setCurrentScreen, clearHistory }) => {
                     acc[quiz.operation] = (acc[quiz.operation] || 0) + 1;
                     return acc;
                 }, {})
-            ).sort(([,a], [,b]) => b - a)[0]?.[0] || 'none'
+            ).sort(([, a], [, b]) => b - a)[0]?.[0] || 'none'
             : 'none'
     };
 
@@ -90,7 +92,7 @@ const DashboardScreen = ({ quizHistory, setCurrentScreen, clearHistory }) => {
                         <h1 className="text-3xl md:text-4xl font-bold text-purple-600">Dashboard</h1>
                         <p className="text-gray-600">Track your math progress!</p>
                     </div>
-                    
+
                     {quizHistory.length > 0 && (
                         <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -107,16 +109,26 @@ const DashboardScreen = ({ quizHistory, setCurrentScreen, clearHistory }) => {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-center py-16"
+                        className="text-center py-16 px-4 bg-white rounded-3xl shadow-lg border-4 border-purple-200"
                     >
-                        <div className="text-8xl mb-4">📊</div>
-                        <h2 className="text-2xl font-bold text-gray-600 mb-2">No Quiz History Yet</h2>
-                        <p className="text-gray-500 mb-8">Start taking quizzes to see your progress here!</p>
+                        {/* Illustration Placeholder */}
+                        <div className="mx-auto w-40 h-40 mb-6">
+                            <div className="w-full h-full text-purple-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <h2 className="text-3xl font-extrabold text-gray-800 mb-2">No Quizzes Yet!</h2>
+                        <p className="text-lg text-gray-600 mb-8 max-w-sm mx-auto">
+                            It looks like you haven't taken any quizzes yet. Start now to track your amazing progress!
+                        </p>
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => window.location.href = '/'}
-                            className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-2xl font-bold text-xl shadow-lg transition-colors duration-300"
+                            onClick={() => navigate('/')}
+                            className="bg-purple-600 hover:bg-purple-700 text-white px-10 py-5 rounded-2xl font-bold text-xl shadow-lg transition-colors duration-300 transform-gpu"
                         >
                             Take Your First Quiz!
                         </motion.button>
@@ -156,11 +168,10 @@ const DashboardScreen = ({ quizHistory, setCurrentScreen, clearHistory }) => {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => setSelectedFilter('all')}
-                                className={`px-4 py-2 rounded-xl font-bold transition-colors duration-300 ${
-                                    selectedFilter === 'all' 
-                                        ? 'bg-purple-600 text-white' 
-                                        : 'bg-white text-purple-600 border-2 border-purple-300'
-                                }`}
+                                className={`px-4 py-2 rounded-xl font-bold transition-colors duration-300 ${selectedFilter === 'all'
+                                    ? 'bg-purple-600 text-white'
+                                    : 'bg-white text-purple-600 border-2 border-purple-300'
+                                    }`}
                             >
                                 All
                             </motion.button>
@@ -170,11 +181,10 @@ const DashboardScreen = ({ quizHistory, setCurrentScreen, clearHistory }) => {
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => setSelectedFilter(key)}
-                                    className={`px-4 py-2 rounded-xl font-bold transition-colors duration-300 flex items-center gap-2 ${
-                                        selectedFilter === key 
-                                            ? `${op.color} text-white` 
-                                            : `bg-white text-gray-700 border-2 border-gray-300`
-                                    }`}
+                                    className={`px-4 py-2 rounded-xl font-bold transition-colors duration-300 flex items-center gap-2 ${selectedFilter === key
+                                        ? `${op.color} text-white`
+                                        : `bg-white text-gray-700 border-2 border-gray-300`
+                                        }`}
                                 >
                                     <i className={op.icon}></i>
                                     <span className="hidden sm:inline">{op.name}</span>
@@ -219,7 +229,7 @@ const DashboardScreen = ({ quizHistory, setCurrentScreen, clearHistory }) => {
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         <div className="flex items-center gap-4">
                                             <div className="text-center">
                                                 <div className="text-lg font-bold text-gray-800">

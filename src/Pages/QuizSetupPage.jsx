@@ -12,10 +12,8 @@ const pageVariants = {
 const QuizSetupPage = () => {
     const { operation } = useParams();
     const navigate = useNavigate();
-    
-    const [kidName, setKidName] = useState(() => {
-        return localStorage.getItem('kidName') || '';
-    });
+
+    const [kidName, setKidName] = useState();
     const [gameSettings, setGameSettings] = useState({
         selectedTables: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         digitCount: 2,
@@ -37,6 +35,10 @@ const QuizSetupPage = () => {
             navigate('/');
         }
     }, [operation, currentOp, navigate]);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [])
 
     const toggleTable = (tableNumber) => {
         setGameSettings(prev => ({
@@ -73,15 +75,12 @@ const QuizSetupPage = () => {
             return;
         }
 
-        // Save kid name to localStorage
-        localStorage.setItem('kidName', kidName.trim());
-        
         // Navigate to quiz with settings
-        navigate(`/quiz/${operation}`, { 
-            state: { 
-                gameSettings, 
-                kidName: kidName.trim() 
-            } 
+        navigate(`/quiz/${operation}`, {
+            state: {
+                gameSettings,
+                kidName: kidName.trim()
+            }
         });
     };
 
@@ -146,11 +145,10 @@ const QuizSetupPage = () => {
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => setGameSettings(prev => ({ ...prev, digitCount: digits }))}
-                                        className={`p-4 rounded-xl border-4 transition-all duration-300 ${
-                                            gameSettings.digitCount === digits 
-                                                ? 'bg-green-500 text-white border-green-500 shadow-lg' 
-                                                : 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200'
-                                        }`}
+                                        className={`p-4 rounded-xl border-4 transition-all duration-300 ${gameSettings.digitCount === digits
+                                            ? 'bg-green-500 text-white border-green-500 shadow-lg'
+                                            : 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200'
+                                            }`}
                                     >
                                         <div className="text-2xl font-bold mb-1">{digits}</div>
                                         <div className="text-sm">Digits</div>
@@ -162,18 +160,18 @@ const QuizSetupPage = () => {
                         <div className="mb-6">
                             <h3 className="text-lg font-bold text-purple-600 mb-3">Select Numbers (1-20)</h3>
                             <div className="flex flex-wrap gap-2 mb-3">
-                                <motion.button 
-                                    whileHover={{ scale: 1.05 }} 
-                                    whileTap={{ scale: 0.95 }} 
-                                    onClick={() => selectTables(1, 20)} 
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => selectTables(1, 20)}
                                     className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-md font-bold text-sm shadow-md"
                                 >
                                     All
                                 </motion.button>
-                                <motion.button 
-                                    whileHover={{ scale: 1.05 }} 
-                                    whileTap={{ scale: 0.95 }} 
-                                    onClick={clearAllTables} 
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={clearAllTables}
                                     className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded-md font-bold text-sm shadow-md"
                                 >
                                     Clear
@@ -192,9 +190,8 @@ const QuizSetupPage = () => {
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
                                             onClick={() => selectTables(start, end)}
-                                            className={`${
-                                                areAllSelected ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-400 hover:bg-gray-500'
-                                            } text-white px-3 py-1.5 rounded-md font-bold shadow-md text-sm`}
+                                            className={`${areAllSelected ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-400 hover:bg-gray-500'
+                                                } text-white px-3 py-1.5 rounded-md font-bold shadow-md text-sm`}
                                         >
                                             {label}
                                         </motion.button>
@@ -206,16 +203,15 @@ const QuizSetupPage = () => {
                                     <motion.button
                                         key={num}
                                         whileTap={{ scale: 0.9 }}
-                                        animate={{ 
-                                            scale: gameSettings.selectedTables.includes(num) ? 1.05 : 1, 
-                                            y: gameSettings.selectedTables.includes(num) ? -2 : 0 
+                                        animate={{
+                                            scale: gameSettings.selectedTables.includes(num) ? 1.05 : 1,
+                                            y: gameSettings.selectedTables.includes(num) ? -2 : 0
                                         }}
                                         onClick={() => toggleTable(num)}
-                                        className={`aspect-square rounded-md text-lg font-bold transition-colors duration-200 flex items-center justify-center ${
-                                            gameSettings.selectedTables.includes(num) 
-                                                ? 'bg-purple-600 text-white shadow-lg' 
-                                                : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
-                                        }`}
+                                        className={`aspect-square rounded-md text-lg font-bold transition-colors duration-200 flex items-center justify-center ${gameSettings.selectedTables.includes(num)
+                                            ? 'bg-purple-600 text-white shadow-lg'
+                                            : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                                            }`}
                                     >
                                         {num}
                                     </motion.button>

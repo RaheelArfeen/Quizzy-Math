@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import DashboardScreen from '../Components/DashboardScreen';
 
@@ -9,12 +9,23 @@ const pageVariants = {
 };
 
 const DashboardPage = () => {
-    const quizHistory = JSON.parse(localStorage.getItem('quizHistory') || '[]');
-    
+    const rawHistory = JSON.parse(localStorage.getItem('quizHistory') || '[]');
+
+    // ✅ remove duplicates by `id`
+    const quizHistory = rawHistory.filter(
+        (item, index, self) =>
+            index === self.findIndex(t => t.id === item.id)
+    );
+
     const clearHistory = () => {
         localStorage.setItem('quizHistory', JSON.stringify([]));
         window.location.reload(); // Simple refresh to update the data
     };
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+        console.log("Cleaned History:", quizHistory);
+    }, []);
 
     return (
         <motion.div
@@ -26,9 +37,9 @@ const DashboardPage = () => {
             transition={{ duration: 0.5 }}
             className="min-h-screen bg-sky-50"
         >
-            <DashboardScreen 
+            <DashboardScreen
                 quizHistory={quizHistory}
-                setCurrentScreen={() => {}} // Not needed with router
+                setCurrentScreen={() => { }} // Not needed with router
                 clearHistory={clearHistory}
             />
         </motion.div>

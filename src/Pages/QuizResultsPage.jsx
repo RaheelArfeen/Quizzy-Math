@@ -13,7 +13,11 @@ const QuizResultsPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { gameState, gameSettings, kidName, operation } = location.state || {};
-    
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     const [showConfetti, setShowConfetti] = useState(false);
     const [totalTimeTaken, setTotalTimeTaken] = useState(0);
 
@@ -25,38 +29,55 @@ const QuizResultsPage = () => {
         }
     }, [gameState, gameSettings, kidName, operation, navigate]);
 
-    const percentage = gameState ? Math.round((gameState.score / gameSettings.totalQuestions) * 100) : 0;
-    
+    // ✅ Use actual answered questions count
+    const totalQuestions = gameState?.userAnswers?.length || gameSettings?.totalQuestions || 0;
+    const percentage = gameState ? Math.round((gameState.score / totalQuestions) * 100) : 0;
+
+    // ✅ Save quiz result only once (prevent duplicate saves in StrictMode)
+    // ✅ Save quiz result only once
     useEffect(() => {
         if (!gameState) return;
-        
+
+        // 👇 Prevent duplicate saves (StrictMode, refreshes, etc.)
+        if (sessionStorage.getItem("quizResultSaved")) return;
+        sessionStorage.setItem("quizResultSaved", "true");
+
         // Calculate total time taken
-        const totalTime = gameState.userAnswers.reduce((sum, answer) => sum + answer.timeTaken, 0);
+        const totalTime = gameState.userAnswers.reduce(
+            (sum, answer) => sum + answer.timeTaken,
+            0
+        );
         setTotalTimeTaken(totalTime);
-        
+
         // Save quiz result to localStorage
         const newResult = {
             id: Date.now(),
             kidName,
             operation,
             score: gameState.score,
-            totalQuestions: gameSettings.totalQuestions,
+            totalQuestions,
             percentage,
             timeTaken: totalTime,
             date: new Date().toISOString(),
             gameSettings: { ...gameSettings }
         };
-        
-        const existingHistory = JSON.parse(localStorage.getItem('quizHistory') || '[]');
-        const updatedHistory = [newResult, ...existingHistory].slice(0, 50);
-        localStorage.setItem('quizHistory', JSON.stringify(updatedHistory));
-        
+
+        const existingHistory = JSON.parse(localStorage.getItem("quizHistory") || "[]");
+
+        // 👇 Deduplicate by id in case of accidental duplicates
+        const updatedHistory = [
+            newResult,
+            ...existingHistory.filter(item => item.id !== newResult.id)
+        ].slice(0, 50);
+
+        localStorage.setItem("quizHistory", JSON.stringify(updatedHistory));
+
         // Show confetti for good scores
         if (percentage >= 70) {
             setShowConfetti(true);
             setTimeout(() => setShowConfetti(false), 3000);
         }
-    }, [gameState, gameSettings, kidName, operation, percentage]);
+    }, []); // still empty array
 
     const getPerformanceMessage = () => {
         if (percentage >= 90) return "🏆 Outstanding! You're a math superstar!";
@@ -103,7 +124,7 @@ const QuizResultsPage = () => {
     return (
         <div className='min-h-screen bg-sky-50 font-fredoka'>
             {showConfetti && <SprinkleEffect />}
-            
+
             <motion.div
                 key="results"
                 initial="initial"
@@ -123,21 +144,21 @@ const QuizResultsPage = () => {
                     >
                         <i className="fas fa-trophy text-4xl text-white"></i>
                     </motion.div>
-                    
+
                     <motion.h1
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.4 }}
-                        className="text-5xl font-bold text-purple-600 mb-2"
+                        className="md:text-5xl text-4xl font-bold text-purple-600 mb-2"
                     >
                         Great Job, {kidName}!
                     </motion.h1>
-                    
+
                     <motion.p
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.5 }}
-                        className={`text-2xl font-bold mb-4 ${getPerformanceColor()}`}
+                        className={`md:text-2xl text-xl font-bold mb-4 ${getPerformanceColor()}`}
                     >
                         {getPerformanceMessage()}
                     </motion.p>
@@ -148,7 +169,7 @@ const QuizResultsPage = () => {
                     initial={{ y: 30, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.6 }}
-                    className="bg-white rounded-3xl p-8 shadow-2xl border-4 border-purple-300 mb-8"
+                    className="bg-white rounded-3xl p-4 md:p-8 shadow-2xl border-4 border-purple-300 mb-8"
                 >
                     {/* Score Display */}
                     <div className="text-center mb-8">
@@ -157,7 +178,7 @@ const QuizResultsPage = () => {
                                 {percentage}%
                             </div>
                             <div className="text-xl font-semibold">
-                                {gameState.score} out of {gameSettings.totalQuestions}
+                                {gameState.score} out of {totalQuestions}
                             </div>
                         </div>
                     </div>
@@ -172,16 +193,16 @@ const QuizResultsPage = () => {
                                 Correct
                             </div>
                         </div>
-                        
+
                         <div className="bg-red-100 rounded-2xl p-4 text-center border-2 border-red-300">
                             <div className="text-3xl font-bold text-red-600">
-                                {gameSettings.totalQuestions - gameState.score}
+                                {totalQuestions - gameState.score}
                             </div>
                             <div className="text-base text-red-800 font-semibold">
                                 Incorrect
                             </div>
                         </div>
-                        
+
                         <div className="bg-green-100 rounded-2xl p-4 text-center border-2 border-green-300">
                             <div className="text-3xl font-bold text-green-600">
                                 {totalTimeTaken}s
@@ -190,7 +211,7 @@ const QuizResultsPage = () => {
                                 Total Time
                             </div>
                         </div>
-                        
+
                         <div className="bg-purple-100 rounded-2xl p-4 text-center border-2 border-purple-300">
                             <div className="text-xl font-bold text-purple-600 capitalize flex items-center justify-center gap-2">
                                 <i className={operations[operation]?.icon}></i>
@@ -207,15 +228,14 @@ const QuizResultsPage = () => {
                         <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">
                             Question Review
                         </h3>
-                        <div className="max-h-80 overflow-y-auto space-y-2">
+                        <div className="overflow-y-auto space-y-2">
                             {gameState.userAnswers.map((answer, index) => (
-                                <div 
+                                <div
                                     key={index}
-                                    className={`flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-xl border-2 ${
-                                        answer.isCorrect 
-                                            ? 'bg-green-50 border-green-300' 
-                                            : 'bg-red-50 border-red-300'
-                                    }`}
+                                    className={`flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-xl border-2 ${answer.isCorrect
+                                        ? 'bg-green-50 border-green-300'
+                                        : 'bg-red-50 border-red-300'
+                                        }`}
                                 >
                                     <div className="flex items-center gap-3 mb-2 sm:mb-0">
                                         <span className={`text-xl ${answer.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
@@ -254,7 +274,7 @@ const QuizResultsPage = () => {
                         <i className="fas fa-redo"></i>
                         Play Again
                     </motion.button>
-                    
+
                     <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -264,7 +284,7 @@ const QuizResultsPage = () => {
                         <i className="fas fa-chart-bar"></i>
                         View Dashboard
                     </motion.button>
-                    
+
                     <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import TimeTablesScreen from '../Components/TimeTablesScreen';
 
@@ -9,6 +9,9 @@ const pageVariants = {
 };
 
 const TimeTablesPage = () => {
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [])
     return (
         <motion.div
             key="time-tables-page"
@@ -19,7 +22,7 @@ const TimeTablesPage = () => {
             transition={{ duration: 0.5 }}
             className="min-h-screen bg-sky-50"
         >
-            <TimeTablesScreen setCurrentScreen={() => {}} />
+            <TimeTablesScreen setCurrentScreen={() => { }} />
         </motion.div>
     );
 };
